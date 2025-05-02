@@ -89,7 +89,7 @@ def factorial(int n) -> int
 {
     int fact;
     for (int i = 0; i <= n; i++) {
-        fact += i;
+        fact *= i;
     }
     return fact;
 }
@@ -161,6 +161,7 @@ If I somehow have extra time I may consider implementing these features:
 - I'd really like to have more builtin types if time allows:
     - dynamic arrays
     - strings
+- allow shorthand expressions such as `++`, `*=`, `-=`, `+=`, etc
 
 # Implementation Notes
 
