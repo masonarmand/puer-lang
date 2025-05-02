@@ -1,0 +1,14 @@
+# Build output
+build/
+
+# Generated parser and lexer files
+src/parser.tab.c
+src/parser.tab.h
+src/lexer.yy.c
+
+# Object files
+src/*.o
+
+# Editor temp files
+*~
+*.swp
