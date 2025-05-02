@@ -57,9 +57,9 @@ Mark and sweep works like this:
 - GC starts from the roots of the graph
 - Follows references from the roots to find what is still reachable
     - depth-first search
-- Marks every unreachable object.
-- The graph is then traversed a second time, this time each marked object
-is freed from memory.
+- Marks every reachable object.
+- The graph is then traversed a second time, this time each unmarked 
+object is freed from memory.
 
 Problems and additional notes:
 - This GC method halts program execution until the GC is finished. My
@@ -67,6 +67,8 @@ interpreter will probably already be super slow, so this will make it
 slower.
 - This method results in memory fragmentation - additional steps can be
 taken to reduce fragmentation.
+    - fragmentation might be pretty bad considering all variables are
+    heap allocated :(
 
 ### C style syntax
 
@@ -86,7 +88,7 @@ Example:
 def factorial(int n) -> int
 {
     int fact;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i <= n; i++) {
         fact += i;
     }
     return fact;
@@ -97,6 +99,10 @@ Although I generally prefer the C style functions where the return type
 is written before the function name, I've noticed this looks messy with
 data types with long names. This is why I've chosen to put the return
 type at the end of the function.
+
+Functions with no args assume function(void) by default. Functions with
+no return type specified assumes the return value is void. Parameter types
+are required.
 
 ### @require preprocessing
 You can 'include' files as a preprocessing step, like in C. The interpreter will avoid circular inclusions, so a file will only be included once.
@@ -152,6 +158,9 @@ If I somehow have extra time I may consider implementing these features:
     - Goal is to make a raylib binding so that I could make a game with
     2d graphics in puer.
 - Basic module system to mimick namespaces so functions defined in `Module math {}` will be called like this `Math.sum`.
+- I'd really like to have more builtin types if time allows:
+    - dynamic arrays
+    - strings
 
 # Implementation Notes
 
@@ -172,7 +181,7 @@ Then makeNode() could be more flexible. maybe something like this:
 ```C
 Node* makeNode(int type, int n_children, ...)
 {
-    Node* n = malloc(sizeof(n));
+    Node* n = malloc(sizeof(Nod/));
     n->type = type;
     n->n_children = n_children;
     n->children = malloc(sizeof(Node*) * n_children);
