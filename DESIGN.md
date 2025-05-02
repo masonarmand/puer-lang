@@ -1,7 +1,10 @@
 # Puer Language Design
 
 Puer is a statically typed scripting language. The syntax is similar to C,
-but with more of a scripting-style flavor.
+but with more of a scripting-style flavor. I wanted to make this because
+most scripting languages have dynamic types which I personally am not a
+fan of. I also think C style syntax is very elegant and am not a fan of
+whitespace-based syntax.
 
 ```
 @require "file.puer"
@@ -20,7 +23,8 @@ def add(int a, int b) -> int
 
 
 // functions with no return value return void by default.
-def main() {
+def main() 
+{
     print("Hello World");
 
     for (int i = 0; i < 5; i++)
@@ -192,7 +196,8 @@ to specify the data types of each token or nonterminal.
 
 example:
 ```C
-%union {
+%union
+{
     int val;
     struct Node* node;
 }
@@ -202,7 +207,8 @@ example:
 ```
 So then using makeNode from earlier (with Node* instead of long):
 ```C
-stmt: IF cond stmt ELSE stmt {
+stmt: IF cond stmt ELSE stmt
+{
      $$ = makeNode(IFELSE, 3, $2, $3, $5);
 }
 ```
