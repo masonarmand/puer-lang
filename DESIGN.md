@@ -146,7 +146,7 @@ def setZero(Point p)
 
 
 Point p;
-setZero(p);
+setZero(p); // p is passed by reference
 
 print(p.x); // zero
 ```
@@ -190,12 +190,12 @@ Node* makeNode(int type, int n_children, ...)
     va_list args;
     va_start(args, n_children);
     for (int i = 0; i < n_children; i++) {
-        node->children[i] = va_arg(args, Node*);
+        n->children[i] = va_arg(args, Node*);
     }
     va_end(args);
     
-    node->value = NULL;
-    return node;
+    n->value = NULL;
+    return n;
 }
 ```
 
