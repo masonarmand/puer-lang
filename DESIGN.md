@@ -187,6 +187,7 @@ Node* makeNode(int type, int n_children, ...)
     node->value = NULL;
     return node;
 }
+```
 
 ## No casting longs
 
