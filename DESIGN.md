@@ -182,7 +182,7 @@ Then makeNode() could be more flexible. maybe something like this:
 ```C
 Node* makeNode(int type, int n_children, ...)
 {
-    Node* n = malloc(sizeof(Nod/));
+    Node* n = malloc(sizeof(Node));
     n->type = type;
     n->n_children = n_children;
     n->children = malloc(sizeof(Node*) * n_children);
