@@ -7,6 +7,7 @@
 #define AST_H
 
 #include <stdarg.h>
+#include "var.h"
 
 #define GETCHILD(node, n) ((node)->children[(n)])
 
@@ -17,7 +18,11 @@ typedef enum {
         NODE_MUL,
         NODE_DIV,
         NODE_PRINT,
-        NODE_SEQ
+        NODE_SEQ,
+
+        NODE_VAR,
+        NODE_VARDECL,
+        NODE_ASSIGN
 } NodeType;
 
 typedef struct Node {
@@ -25,6 +30,8 @@ typedef struct Node {
         struct Node** children;
         int n_children;
         int ival; /* for NODE_NUM */
+        char* varname;
+        VarType vartype;
 } Node;
 
 /* ast.c */

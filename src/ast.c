@@ -13,7 +13,7 @@ Node* makeNode(NodeType type, int n_children, ...)
         unsigned int i;
 
         n->type = type;
-        n->n_children;
+        n->n_children = n_children;
         n->children = malloc(sizeof(Node*) * n_children);
 
         va_list args;

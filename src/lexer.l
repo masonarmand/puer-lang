@@ -9,15 +9,22 @@
 %}
 
 %%
-[ \t\r\n]+      ;
-[0-9]+          { yylval.val = atoi(yytext); return NUM; }
-"+"             return ADD;
-"-"             return SUB;
-"*"             return MUL;
-"/"             return DIV;
-"print"         return PRINT;
-";"             return SEMICOLON;
-"("             return LPAREN;
-")"             return RPAREN;
-.               return *yytext;
+[ \t\r\n]+               ;
+[0-9]+                   { yylval.val = atoi(yytext); return NUM; }
+
+"+"                      return ADD;
+"-"                      return SUB;
+"*"                      return MUL;
+"/"                      return DIV;
+"print"                  return PRINT;
+";"                      return SEMICOLON;
+"("                      return LPAREN;
+")"                      return RPAREN;
+
+"int"                    { yylval.vartype = TYPE_INT; return TYPEKEYWORD; }
+
+[a-zA-Z_][a-zA-Z0-9_]*   { yylval.ident = strdup(yytext); return IDENT; }
+
+
+.                        return *yytext;
 %%
