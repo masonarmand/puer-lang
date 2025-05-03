@@ -18,6 +18,7 @@ typedef enum {
         NODE_MUL,
         NODE_DIV,
         NODE_PRINT,
+        NODE_PRINTLN,
         NODE_SEQ,
 
         NODE_VAR,

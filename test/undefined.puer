@@ -1,0 +1,2 @@
+hello_world = 10;
+println(hello_world);

@@ -17,6 +17,7 @@
 "*"                      return MUL;
 "/"                      return DIV;
 "print"                  return PRINT;
+"println"                return PRINTLN;
 ";"                      return SEMICOLON;
 "("                      return LPAREN;
 ")"                      return RPAREN;

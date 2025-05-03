@@ -13,12 +13,14 @@ typedef struct {
 
 void eval_seq(Node* node);
 void eval_print(Node* node);
+void eval_println(Node* node);
 void eval_vardecl(Node* node);
 void eval_assign(Node* node);
 
 static StmtDispatch handlers[] = {
         { NODE_SEQ, eval_seq },
         { NODE_PRINT, eval_print },
+        { NODE_PRINTLN, eval_println },
         { NODE_VARDECL, eval_vardecl },
         { NODE_ASSIGN, eval_assign },
         { -1, NULL },
@@ -45,6 +47,11 @@ void eval_seq(Node* node)
 }
 
 void eval_print(Node* node)
+{
+        printf("%d", eval_expr(node->children[0]));
+}
+
+void eval_println(Node* node)
 {
         printf("%d\n", eval_expr(node->children[0]));
 }

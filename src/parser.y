@@ -37,6 +37,7 @@ Node* root;
 %token <val> NUM
 %token ADD SUB MUL DIV
 %token PRINT
+%token PRINTLN
 %token SEMICOLON
 %token LPAREN RPAREN
 %token <vartype> TYPEKEYWORD
@@ -56,6 +57,7 @@ code:
 
 stmt:
     PRINT LPAREN expr RPAREN     { $$ = makeNode(NODE_PRINT, 1, $3); }
+    | PRINTLN LPAREN expr RPAREN { $$ = makeNode(NODE_PRINTLN, 1, $3); }
 
     /* variable declarations & assignments */
     | TYPEKEYWORD IDENT          { $$ = makeNode(NODE_VARDECL, 0); $$->varname = $2; $$->vartype = $1; }
