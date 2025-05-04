@@ -7,6 +7,7 @@
 - [ ] More control flow statements:
     - [ ] for loop
     - [ ] while loop
+- [ ] input()
 - [ ] Record/struct with members
 - [ ] Basic procedures
 - [ ] functions with return types and args
