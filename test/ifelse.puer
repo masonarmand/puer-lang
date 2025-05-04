@@ -1,0 +1,30 @@
+if (1) {
+        println(1);
+        if (0) {
+                print(1);
+                if (0) println(0);
+        }
+        else {
+                println(0);
+        }
+}
+else
+        print(0);
+
+int num1 = 20;
+int num_two = 30;
+
+if (num1 > num_two)
+        println(100);
+else
+        println(200);
+
+int a = 20;
+int b = 20;
+if (0) {
+} else if (a == b) {
+        println(300);
+}
+
+if (1) {}
+println(400);

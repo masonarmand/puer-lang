@@ -32,31 +32,48 @@ Node* root;
 
 %left ADD SUB
 %left MUL DIV
+%left EQ NE
+%left LT GT LE GE
 %right UMINUS
+%nonassoc IFX
+%nonassoc ELSE
 
 %token <val> NUM
 %token ADD SUB MUL DIV
+%token LT GT LE GE EQ NE
+%token IF ELSE
 %token PRINT
 %token PRINTLN
 %token SEMICOLON
 %token LPAREN RPAREN
+%token LBRACE RBRACE
 %token <vartype> TYPEKEYWORD
 %token <ident> IDENT
 
-%type <node> expr stmt code puer
+%type <node> expr control_stmt stmt block code puer
 
 %%
-puer:
-    code                         { root = $1; }
+puer
+    : code                       { root = $1; }
     ;
 
-code:
-    stmt SEMICOLON code          { $$ = makeNode(NODE_SEQ, 2, $1, $3); }
-    | stmt SEMICOLON             { $$ = $1; }
-    ;
+block
+    : stmt SEMICOLON             { $$ = $1; }
+    | control_stmt               { $$ = $1; }
+    | LBRACE code RBRACE         { $$ = $2; }
 
-stmt:
-    PRINT LPAREN expr RPAREN     { $$ = makeNode(NODE_PRINT, 1, $3); }
+code
+    : /* empty */                { $$ = makeNode(NODE_NOP, 0); }
+    | code stmt SEMICOLON        { $$ = makeNode(NODE_SEQ, 2, $1, $2); }
+    | code control_stmt          { $$ = makeNode(NODE_SEQ, 2, $1, $2); }
+    ;
+control_stmt
+    : IF LPAREN expr RPAREN block %prec IFX
+                                 { $$ = makeNode(NODE_IF, 2, $3, $5); }
+    | IF LPAREN expr RPAREN block ELSE block
+                                 { $$ = makeNode(NODE_IFELSE, 3, $3, $5, $7); }
+stmt
+    : PRINT LPAREN expr RPAREN   { $$ = makeNode(NODE_PRINT, 1, $3); }
     | PRINTLN LPAREN expr RPAREN { $$ = makeNode(NODE_PRINTLN, 1, $3); }
 
     /* variable declarations & assignments */
@@ -65,8 +82,14 @@ stmt:
     | IDENT '=' expr             { $$ = makeNode(NODE_ASSIGN, 1, $3); $$->varname = $1; }
     ;
 
-expr:
-    NUM                          {
+expr
+    :expr LT expr                { $$ = makeNode(NODE_LT, 2, $1, $3); }
+    | expr GT expr               { $$ = makeNode(NODE_GT, 2, $1, $3); }
+    | expr LE expr               { $$ = makeNode(NODE_LE, 2, $1, $3); }
+    | expr GE expr               { $$ = makeNode(NODE_GE, 2, $1, $3); }
+    | expr EQ expr               { $$ = makeNode(NODE_EQ, 2, $1, $3); }
+    | expr NE expr               { $$ = makeNode(NODE_NE, 2, $1, $3); }
+    | NUM                        {
                                    $$ = makeNode(NODE_NUM, 0);
                                    $$->ival = $1;
                                  }

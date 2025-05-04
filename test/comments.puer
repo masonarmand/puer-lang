@@ -1,0 +1,8 @@
+// this is a comment
+println(100); // this is also a comment
+if (1) { // comment
+        // comment
+        println(200); // comment
+} // comment
+// comment
+println(300);

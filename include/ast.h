@@ -12,6 +12,7 @@
 #define GETCHILD(node, n) ((node)->children[(n)])
 
 typedef enum {
+        NODE_NOP,
         NODE_NUM,
         NODE_ADD,
         NODE_SUB,
@@ -23,7 +24,17 @@ typedef enum {
 
         NODE_VAR,
         NODE_VARDECL,
-        NODE_ASSIGN
+        NODE_ASSIGN,
+
+        NODE_IF,
+        NODE_IFELSE,
+        /* conditions */
+        NODE_LT,
+        NODE_GT,
+        NODE_LE,
+        NODE_GE,
+        NODE_EQ,
+        NODE_NE
 } NodeType;
 
 typedef struct Node {

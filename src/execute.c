@@ -16,13 +16,19 @@ void eval_print(Node* node);
 void eval_println(Node* node);
 void eval_vardecl(Node* node);
 void eval_assign(Node* node);
+void eval_if(Node* node);
+void eval_ifelse(Node* node);
+void eval_nop(Node* node);
 
 static StmtDispatch handlers[] = {
+        { NODE_NOP, eval_nop },
         { NODE_SEQ, eval_seq },
         { NODE_PRINT, eval_print },
         { NODE_PRINTLN, eval_println },
         { NODE_VARDECL, eval_vardecl },
         { NODE_ASSIGN, eval_assign },
+        { NODE_IF, eval_if },
+        { NODE_IFELSE, eval_ifelse },
         { -1, NULL },
 };
 
@@ -100,13 +106,43 @@ void eval_assign(Node* node)
         }
 }
 
+void eval_if(Node* node)
+{
+        if (eval_expr(node->children[0]))
+                eval(node->children[1]);
+}
+
+void eval_ifelse(Node* node)
+{
+        if (eval_expr(node->children[0]))
+                eval(node->children[1]);
+        else
+                eval(node->children[2]);
+}
+
+void eval_nop(Node* node)
+{
+        return;
+}
+
 
 int eval_expr(Node* node)
 {
         switch (node->type) {
+        case NODE_LT:
+                return eval_expr(GETCHILD(node, 0)) < eval_expr(GETCHILD(node, 1));
+        case NODE_GT:
+                return eval_expr(GETCHILD(node, 0)) > eval_expr(GETCHILD(node, 1));
+        case NODE_LE:
+                return eval_expr(GETCHILD(node, 0)) <= eval_expr(GETCHILD(node, 1));
+        case NODE_GE:
+                return eval_expr(GETCHILD(node, 0)) >= eval_expr(GETCHILD(node, 1));
+        case NODE_EQ:
+                return eval_expr(GETCHILD(node, 0)) == eval_expr(GETCHILD(node, 1));
+        case NODE_NE:
+                return eval_expr(GETCHILD(node, 0)) != eval_expr(GETCHILD(node, 1));
         case NODE_NUM:
                 return node->ival;
-                break;
         case NODE_VAR:
                 Var* v = env_get(node->varname);
                 if (!v) {
@@ -114,19 +150,14 @@ int eval_expr(Node* node)
                         exit(1);
                 }
                 return v->data.i;
-                break;
         case NODE_ADD:
                 return eval_expr(GETCHILD(node, 0)) + eval_expr(GETCHILD(node, 1));
-                break;
         case NODE_SUB:
                 return eval_expr(GETCHILD(node, 0)) - eval_expr(GETCHILD(node, 1));
-                break;
         case NODE_MUL:
                 return eval_expr(GETCHILD(node, 0)) * eval_expr(GETCHILD(node, 1));
-                break;
         case NODE_DIV:
                 return eval_expr(GETCHILD(node, 0)) / eval_expr(GETCHILD(node, 1));
-                break;
         default:
                 fprintf(stderr, "Unhandled stmt expr type: %d\n", node->type);
                 exit(1);
