@@ -41,16 +41,17 @@ Node* root;
 %token <val> NUM
 %token ADD SUB MUL DIV
 %token LT GT LE GE EQ NE
-%token IF ELSE
+%token IF ELSE FOR
 %token PRINT
 %token PRINTLN
 %token SEMICOLON
 %token LPAREN RPAREN
 %token LBRACE RBRACE
+%token BREAK CONTINUE
 %token <vartype> TYPEKEYWORD
 %token <ident> IDENT
 
-%type <node> expr control_stmt stmt block code puer
+%type <node> expr control_stmt stmt block code puer opt_stmt opt_expr
 
 %%
 puer
@@ -67,19 +68,44 @@ code
     | code stmt SEMICOLON        { $$ = makeNode(NODE_SEQ, 2, $1, $2); }
     | code control_stmt          { $$ = makeNode(NODE_SEQ, 2, $1, $2); }
     ;
+
 control_stmt
     : IF LPAREN expr RPAREN block %prec IFX
-                                 { $$ = makeNode(NODE_IF, 2, $3, $5); }
+                                 {
+                                   $$ = makeNode(NODE_IF, 2, $3, $5);
+                                 }
     | IF LPAREN expr RPAREN block ELSE block
-                                 { $$ = makeNode(NODE_IFELSE, 3, $3, $5, $7); }
+                                 {
+                                   $$ = makeNode(NODE_IFELSE, 3, $3, $5, $7);
+                                 }
+    | FOR LPAREN opt_stmt SEMICOLON opt_expr SEMICOLON opt_stmt RPAREN block
+                                 {
+                                   $$ = makeNode(NODE_FOR, 4, $3, $5, $7, $9);
+                                 }
+    ;
+
+/* optional statements. ex: for things like for(;;)*/
+opt_stmt
+    : /* empty */                { $$ = makeNode(NODE_NOP, 0); }
+    | stmt                       { $$ = $1; }
+    ;
+
+/* optional conditions */
+opt_expr
+    : /* empty */                { $$ = makeNode(NODE_NOP, 0); }
+    | expr                       { $$ = $1; }
+    ;
+
 stmt
     : PRINT LPAREN expr RPAREN   { $$ = makeNode(NODE_PRINT, 1, $3); }
-    | PRINTLN LPAREN expr RPAREN { $$ = makeNode(NODE_PRINTLN, 1, $3); }
+    | PRINTLN LPAREN opt_expr RPAREN { $$ = makeNode(NODE_PRINTLN, 1, $3); }
 
     /* variable declarations & assignments */
     | TYPEKEYWORD IDENT          { $$ = makeNode(NODE_VARDECL, 0); $$->varname = $2; $$->vartype = $1; }
     | TYPEKEYWORD IDENT '=' expr { $$ = makeNode(NODE_VARDECL, 1, $4); $$->varname = $2; $$->vartype = $1; }
     | IDENT '=' expr             { $$ = makeNode(NODE_ASSIGN, 1, $3); $$->varname = $1; }
+    | BREAK                      { $$ = makeNode(NODE_BREAK, 0); }
+    | CONTINUE                   { $$ = makeNode(NODE_CONTINUE, 0); }
     ;
 
 expr

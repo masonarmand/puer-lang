@@ -11,6 +11,16 @@ typedef struct {
         StmtHandler handler;
 } StmtDispatch;
 
+typedef enum {
+        CTRL_NONE,
+        CTRL_BREAK,
+        CTRL_CONTINUE
+} CtrlSignal;
+
+CtrlSignal eval_with_ctrl(Node* node);
+CtrlSignal eval_if_ctrl(Node* node);
+CtrlSignal eval_ifelse_ctrl(Node* node);
+
 void eval_seq(Node* node);
 void eval_print(Node* node);
 void eval_println(Node* node);
@@ -18,6 +28,7 @@ void eval_vardecl(Node* node);
 void eval_assign(Node* node);
 void eval_if(Node* node);
 void eval_ifelse(Node* node);
+void eval_for(Node* node);
 void eval_nop(Node* node);
 
 static StmtDispatch handlers[] = {
@@ -29,6 +40,7 @@ static StmtDispatch handlers[] = {
         { NODE_ASSIGN, eval_assign },
         { NODE_IF, eval_if },
         { NODE_IFELSE, eval_ifelse },
+        { NODE_FOR, eval_for },
         { -1, NULL },
 };
 
@@ -46,6 +58,48 @@ void eval(Node* node)
         exit(1);
 }
 
+/* for handling break & continue in loops */
+CtrlSignal eval_with_ctrl(Node* node)
+{
+        unsigned int i;
+
+        switch (node->type) {
+        case NODE_SEQ:
+                for (i = 0; i < node->n_children; i++) {
+                        CtrlSignal sig = eval_with_ctrl(node->children[i]);
+                        if (sig != CTRL_NONE)
+                                return sig;
+                }
+                return CTRL_NONE;
+        case NODE_BREAK:
+                return CTRL_BREAK;
+        case NODE_CONTINUE:
+                return NODE_CONTINUE;
+        case NODE_IF:
+                return eval_if_ctrl(node);
+        case NODE_IFELSE:
+                return eval_ifelse_ctrl(node);
+        default:
+                eval(node);
+                return CTRL_NONE;
+        }
+}
+
+CtrlSignal eval_if_ctrl(Node* node)
+{
+        if (eval_expr(node->children[0]))
+                return eval_with_ctrl(node->children[1]);
+        return CTRL_NONE;
+}
+
+CtrlSignal eval_ifelse_ctrl(Node* node)
+{
+        if (eval_expr(node->children[0]))
+                return eval_with_ctrl(node->children[1]);
+        else if (eval_expr(node->children[1]))
+                return eval_with_ctrl(node->children[2]);
+}
+
 void eval_seq(Node* node)
 {
         eval(node->children[0]);
@@ -59,6 +113,10 @@ void eval_print(Node* node)
 
 void eval_println(Node* node)
 {
+        if (node->children[0]->type == NODE_NOP) {
+                printf("\n");
+                return;
+        }
         printf("%d\n", eval_expr(node->children[0]));
 }
 
@@ -120,6 +178,29 @@ void eval_ifelse(Node* node)
                 eval(node->children[2]);
 }
 
+void eval_for(Node* node)
+{
+        /* for init */
+        env_push();
+        eval(node->children[0]);
+
+        while (eval_expr(node->children[1])) {
+                /* for body */
+                CtrlSignal sig = eval_with_ctrl(node->children[3]);
+                if (sig == CTRL_BREAK)
+                        break;
+                if (sig == CTRL_CONTINUE) {
+                        eval(node->children[2]);
+                        continue;
+                }
+
+                /* for incr */
+                eval(node->children[2]);
+
+        }
+        env_pop();
+}
+
 void eval_nop(Node* node)
 {
         return;
@@ -129,6 +210,8 @@ void eval_nop(Node* node)
 int eval_expr(Node* node)
 {
         switch (node->type) {
+        case NODE_NOP:
+                return 1;
         case NODE_LT:
                 return eval_expr(GETCHILD(node, 0)) < eval_expr(GETCHILD(node, 1));
         case NODE_GT:

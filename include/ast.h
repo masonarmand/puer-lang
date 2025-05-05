@@ -26,8 +26,13 @@ typedef enum {
         NODE_VARDECL,
         NODE_ASSIGN,
 
+        /* control flow */
         NODE_IF,
         NODE_IFELSE,
+        NODE_FOR,
+        NODE_BREAK,
+        NODE_CONTINUE,
+
         /* conditions */
         NODE_LT,
         NODE_GT,

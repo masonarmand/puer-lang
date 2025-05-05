@@ -1,0 +1,51 @@
+for (int i = 0; i < 10; i = i + 1) {
+        if (i == 2)
+                println(i);
+}
+
+println();
+// error: i is out of scope: println(i);
+int i;
+for (i = 0; i < 10; i = i + 1)
+        print(i);
+println();
+print(i); // i should be in scope now
+println();
+
+
+for (int k = 0; k < 10; k = k + 1)
+{
+        println(100000);
+        println(k);
+}
+
+int xmax = 5;
+int ymax = 5;
+
+for (int y = 0; y < ymax; y = y + 1) {
+        for (int x = 0; x < xmax; x = x + 1) {
+                print(x);
+        }
+        println();
+}
+
+int b = 0;
+
+for (;;) {
+        b = b + 1;
+        print(b);
+        if (b > 10)
+                break;
+}
+
+println();
+println();
+println();
+
+for (int j = 0; j < 5; j = j + 1) {
+        if (j == 3) {
+                continue;
+        }
+        print(j);
+}
+println();

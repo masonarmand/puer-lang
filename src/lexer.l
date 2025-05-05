@@ -28,6 +28,9 @@
 
 "if"                     return IF;
 "else"                   return ELSE;
+"for"                    return FOR;
+"break"                  return BREAK;
+"continue"               return CONTINUE;
 
 "print"                  return PRINT;
 "println"                return PRINTLN;
