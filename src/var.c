@@ -4,6 +4,8 @@
 
 VarType common_type(VarType a, VarType b)
 {
+        if (a == b)
+                return a;
         if (a == TYPE_FLOAT || b == TYPE_FLOAT)
                 return TYPE_FLOAT;
         if (a == TYPE_LONG || b == TYPE_LONG)

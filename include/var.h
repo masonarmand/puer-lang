@@ -10,8 +10,8 @@ typedef enum VarType {
         TYPE_INT,
         TYPE_UINT,
         TYPE_LONG,
-        TYPE_BOOL,
         TYPE_FLOAT,
+        TYPE_BOOL,
         TYPE_STRING
 } VarType;
 

@@ -1,0 +1,25 @@
+// int tests
+int a = 10;
+int b = 3;
+println(a + b);       // 13
+println(a - b);       // 7
+println(a * b);       // 30
+println(a / b);       // 3
+println(a % b);       // 1
+println(a == b);      // 0
+println(a > b);       // 1
+
+// float tests
+float fa = 2.5;
+float fb = 0.5;
+println(fa + fb);     // 3.0
+println(fa - fb);     // 2.0
+println(fa * fb);     // 1.25
+println(fa / fb);     // 5.0
+println(fa > fb);     // 1
+
+// mixed-type coercion
+int mix1 = 5;
+float mix2 = 2.0;
+println(mix1 + mix2); // 7.0 (should promote to float)
+println(mix1 < mix2); // 0

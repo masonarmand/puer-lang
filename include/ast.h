@@ -14,10 +14,12 @@
 typedef enum {
         NODE_NOP,
         NODE_NUM,
+        NODE_FLOAT,
         NODE_ADD,
         NODE_SUB,
         NODE_MUL,
         NODE_DIV,
+        NODE_MOD,
         NODE_PRINT,
         NODE_PRINTLN,
         NODE_SEQ,
@@ -47,6 +49,7 @@ typedef struct Node {
         struct Node** children;
         int n_children;
         int ival; /* for NODE_NUM */
+        float fval; /* for NODE_FLOAT */
         char* varname;
         VarType vartype;
 

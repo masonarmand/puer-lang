@@ -6,7 +6,7 @@ WARNINGS = -Wall -Wextra -Wpedantic -Werror \
 
 CC = gcc
 # CFLAGS = -std=c89 -D_POSIX_C_SOURCE=200809L -Iinclude $(WARNINGS)
-CFLAGS = -std=c89 -D_POSIX_C_SOURCE=200809L -Iinclude
+CFLAGS = -g -std=c89 -D_POSIX_C_SOURCE=200809L -Iinclude
 LDFLAGS = -lfl
 EXEC = puer
 

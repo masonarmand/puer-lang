@@ -1,9 +1,10 @@
 # TODO
-- [ ] make eval_expr return generic Var type instead of int
+- [*] make eval_expr return generic Var type instead of int
 - [ ] add in support for more basic types:
     - [ ] uint (unsigned integer)
     - [ ] long
-    - [ ] float
+    - [*] float
+    - [ ] mixed type coersion
 - [ ] More control flow statements:
     - [*] for loop
     - [ ] while loop
