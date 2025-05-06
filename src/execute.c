@@ -101,7 +101,7 @@ CtrlSignal eval_with_ctrl(Node* node)
         case NODE_BREAK:
                 return CTRL_BREAK;
         case NODE_CONTINUE:
-                return NODE_CONTINUE;
+                return CTRL_CONTINUE;
         case NODE_IF:
                 return eval_if_ctrl(node);
         case NODE_IFELSE:
@@ -246,7 +246,7 @@ Var eval_arith(Node* node,
                 set_float(&result, f_op(to_float(&a), to_float(&b)));
                 break;
         case TYPE_LONG:
-                set_float(&result, l_op(to_long(&a), to_long(&b)));
+                set_long(&result, l_op(to_long(&a), to_long(&b)));
                 break;
         case TYPE_UINT:
                 set_uint(&result, u_op(a.data.ui, b.data.ui));
