@@ -1,5 +1,6 @@
 # Build output
 build/
+puer
 
 # Generated parser and lexer files
 src/parser.tab.c
