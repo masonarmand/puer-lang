@@ -6,6 +6,9 @@
 %code requires {
         #include "var.h"
 }
+
+%locations
+
 %{
 #include <stdio.h>
 #include "ast.h"

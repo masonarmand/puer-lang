@@ -5,7 +5,7 @@
     - [ ] long
     - [ ] float
 - [ ] More control flow statements:
-    - [ ] for loop
+    - [*] for loop
     - [ ] while loop
 - [ ] input()
 - [ ] Record/struct with members

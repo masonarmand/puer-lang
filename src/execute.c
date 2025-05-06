@@ -1,8 +1,33 @@
 #include "ast.h"
 #include "env.h"
+#include "util.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#define DEFINE_OPS(opname, op) \
+	static float f_##opname(float a, float b) { return a op b; } \
+        static long long l_##opname(long long a, long long b) { return a op b; } \
+        static unsigned u_##opname(unsigned a, unsigned b) { return a op b; } \
+        static int i_##opname(int a, int b) { return a op b; }
+
+#define DEFINE_CMPS(cmpname, op) \
+    static int f_##cmpname(float a, float b) { return a op b; } \
+    static int l_##cmpname(long long a, long long b) { return a op b; } \
+    static int u_##cmpname(unsigned a, unsigned b) { return a op b; } \
+    static int i_##cmpname(int a, int b) { return a op b; }
+
+DEFINE_CMPS(lt, <)
+DEFINE_CMPS(gt, >)
+DEFINE_CMPS(le, <=)
+DEFINE_CMPS(ge, >=)
+DEFINE_CMPS(eq, ==)
+DEFINE_CMPS(ne, !=)
+DEFINE_OPS(add, +)
+DEFINE_OPS(sub, -)
+DEFINE_OPS(mul, *)
+DEFINE_OPS(div, /)
+
 
 typedef void (*StmtHandler)(Node*);
 
@@ -17,9 +42,12 @@ typedef enum {
         CTRL_CONTINUE
 } CtrlSignal;
 
+Var eval_expr(Node* node);
+
 CtrlSignal eval_with_ctrl(Node* node);
 CtrlSignal eval_if_ctrl(Node* node);
 CtrlSignal eval_ifelse_ctrl(Node* node);
+CtrlSignal eval_block(Node* node);
 
 void eval_seq(Node* node);
 void eval_print(Node* node);
@@ -54,8 +82,7 @@ void eval(Node* node)
                 }
         }
 
-        fprintf(stderr, "Unhandled stmt type: %d\n", node->type);
-        exit(1);
+        die(node, "unhandled stmt type: %d", node->type);
 }
 
 /* for handling break & continue in loops */
@@ -87,17 +114,25 @@ CtrlSignal eval_with_ctrl(Node* node)
 
 CtrlSignal eval_if_ctrl(Node* node)
 {
-        if (eval_expr(node->children[0]))
-                return eval_with_ctrl(node->children[1]);
+        if (as_int(eval_expr(node->children[0])))
+                return eval_block(node->children[1]);
         return CTRL_NONE;
 }
 
 CtrlSignal eval_ifelse_ctrl(Node* node)
 {
-        if (eval_expr(node->children[0]))
-                return eval_with_ctrl(node->children[1]);
-        else if (eval_expr(node->children[1]))
-                return eval_with_ctrl(node->children[2]);
+        if (as_int(eval_expr(node->children[0])))
+                return eval_block(node->children[1]);
+        else
+                return eval_block(node->children[2]);
+}
+
+CtrlSignal eval_block(Node* node)
+{
+        env_push();
+        CtrlSignal sig = eval_with_ctrl(node);
+        env_pop();
+        return sig;
 }
 
 void eval_seq(Node* node)
@@ -108,36 +143,32 @@ void eval_seq(Node* node)
 
 void eval_print(Node* node)
 {
-        printf("%d", eval_expr(node->children[0]));
+        /* TODO properly handle print for all var types */
+        printf("%d", as_int(eval_expr(node->children[0])));
 }
 
 void eval_println(Node* node)
 {
+        /* TODO properly handle println for all var types */
         if (node->children[0]->type == NODE_NOP) {
                 printf("\n");
                 return;
         }
-        printf("%d\n", eval_expr(node->children[0]));
+        printf("%d\n", as_int(eval_expr(node->children[0])));
 }
 
 void eval_vardecl(Node* node)
 {
         Var v;
-        v.data.i = 0;
         v.type = node->vartype;
 
         /* if var is initialized with a value */
         if (node->n_children > 0) {
-                int result = eval_expr(GETCHILD(node, 0));
-
-                switch (v.type) {
-                case TYPE_INT:
-                        v.data.i = result;
-                        break;
-                default:
-                        fprintf(stderr, "init expr type mismatch for %s\n", node->varname);
-                        exit(1);
+                Var result = eval_expr(GETCHILD(node, 0));
+                if (result.type != node->vartype) {
+                        die(node, "init expr type mismatch for '%s'", node->varname);
                 }
+                v = result;
         }
 
         env_set(node->varname, v);
@@ -146,36 +177,29 @@ void eval_vardecl(Node* node)
 void eval_assign(Node* node)
 {
         Var* v = env_get(node->varname);
+        Var result;
         if (!v) {
-                fprintf(stderr, "assignment to undeclared variable '%s'\n", node->varname);
-                exit(1);
+                die(node, "assignment to undeclared variable '%s'", node->varname);
         }
 
-        /* TODO: support more than just int type */
-        int result = eval_expr(GETCHILD(node, 0));
-
-        switch (v->type) {
-        case TYPE_INT:
-                v->data.i = result;
-                break;
-        default:
-                fprintf(stderr, "Type error: cannot assign to variable '%s'\n", node->varname);
-                exit(1);
-        }
+        result = eval_expr(GETCHILD(node, 0));
+        if (result.type != v->type)
+                die(node, "Type error: cannot assign to variable '%s'", node->varname);
+        v->data = result.data;
 }
 
 void eval_if(Node* node)
 {
-        if (eval_expr(node->children[0]))
-                eval(node->children[1]);
+        if (as_int(eval_expr(node->children[0])))
+                eval_block(node->children[1]);
 }
 
 void eval_ifelse(Node* node)
 {
-        if (eval_expr(node->children[0]))
-                eval(node->children[1]);
+        if (as_int(eval_expr(node->children[0])))
+                eval_block(node->children[1]);
         else
-                eval(node->children[2]);
+                eval_block(node->children[2]);
 }
 
 void eval_for(Node* node)
@@ -184,9 +208,9 @@ void eval_for(Node* node)
         env_push();
         eval(node->children[0]);
 
-        while (eval_expr(node->children[1])) {
+        while (as_int(eval_expr(node->children[1]))) {
                 /* for body */
-                CtrlSignal sig = eval_with_ctrl(node->children[3]);
+                CtrlSignal sig = eval_block(node->children[3]);
                 if (sig == CTRL_BREAK)
                         break;
                 if (sig == CTRL_CONTINUE) {
@@ -206,43 +230,107 @@ void eval_nop(Node* node)
         return;
 }
 
-
-int eval_expr(Node* node)
+Var eval_arith(Node* node,
+                float (*f_op)(float, float),
+                long long (*l_op)(long long, long long),
+                unsigned (*u_op)(unsigned, unsigned),
+                int (*i_op)(int, int))
 {
+        Var a = eval_expr(node->children[0]);
+        Var b = eval_expr(node->children[1]);
+        Var result;
+        VarType type = common_type(a.type, b.type);
+
+        switch (type) {
+        case TYPE_FLOAT:
+                set_float(&result, f_op(to_float(&a), to_float(&b)));
+                break;
+        case TYPE_LONG:
+                set_float(&result, l_op(to_long(&a), to_long(&b)));
+                break;
+        case TYPE_UINT:
+                set_uint(&result, u_op(a.data.ui, b.data.ui));
+                break;
+        case TYPE_INT:
+                set_int(&result, i_op(a.data.i, b.data.i));
+                break;
+        default:
+                die(node, "unsupported type in arithmetic expression");
+        }
+        return result;
+}
+
+Var eval_cmp(Node* node,
+        int (*f_cmp)(float, float),
+        int (*l_cmp)(long long, long long),
+        int (*u_cmp)(unsigned, unsigned),
+        int (*i_cmp)(int, int))
+{
+        Var a = eval_expr(node->children[0]);
+        Var b = eval_expr(node->children[1]);
+        int result;
+        VarType type = common_type(a.type, b.type);
+
+        switch (type) {
+        case TYPE_FLOAT:
+                result = f_cmp(to_float(&a), to_float(&b));
+                break;
+        case TYPE_LONG:
+                result = l_cmp(to_long(&a), to_long(&b));
+                break;
+        case TYPE_UINT:
+                result = u_cmp(a.data.ui, b.data.ui);
+                break;
+        case TYPE_INT:
+                result = i_cmp(a.data.i, b.data.i);
+                break;
+        default: die(node, "unsupported type in comparison expression");
+        }
+
+        Var out;
+        set_int(&out, result);
+        return out;
+}
+
+Var eval_expr(Node* node)
+{
+        Var v;
+
         switch (node->type) {
         case NODE_NOP:
-                return 1;
-        case NODE_LT:
-                return eval_expr(GETCHILD(node, 0)) < eval_expr(GETCHILD(node, 1));
-        case NODE_GT:
-                return eval_expr(GETCHILD(node, 0)) > eval_expr(GETCHILD(node, 1));
-        case NODE_LE:
-                return eval_expr(GETCHILD(node, 0)) <= eval_expr(GETCHILD(node, 1));
-        case NODE_GE:
-                return eval_expr(GETCHILD(node, 0)) >= eval_expr(GETCHILD(node, 1));
-        case NODE_EQ:
-                return eval_expr(GETCHILD(node, 0)) == eval_expr(GETCHILD(node, 1));
-        case NODE_NE:
-                return eval_expr(GETCHILD(node, 0)) != eval_expr(GETCHILD(node, 1));
+                set_int(&v, 1);
+                return v;
         case NODE_NUM:
-                return node->ival;
+                set_int(&v, node->ival);
+                return v;
         case NODE_VAR:
-                Var* v = env_get(node->varname);
-                if (!v) {
-                        fprintf(stderr, "undefined variable: '%s'\n", node->varname);
-                        exit(1);
-                }
-                return v->data.i;
+                Var* found = env_get(node->varname);
+                if (!found)
+                        die(node, "undefined variable '%s'", node->varname);
+                return *found;
         case NODE_ADD:
-                return eval_expr(GETCHILD(node, 0)) + eval_expr(GETCHILD(node, 1));
+                return eval_arith(node, f_add, l_add, u_add, i_add);
         case NODE_SUB:
-                return eval_expr(GETCHILD(node, 0)) - eval_expr(GETCHILD(node, 1));
+                return eval_arith(node, f_sub, l_sub, u_sub, i_sub);
         case NODE_MUL:
-                return eval_expr(GETCHILD(node, 0)) * eval_expr(GETCHILD(node, 1));
+                return eval_arith(node, f_mul, l_mul, u_mul, i_mul);
         case NODE_DIV:
-                return eval_expr(GETCHILD(node, 0)) / eval_expr(GETCHILD(node, 1));
+                return eval_arith(node, f_div, l_div, u_div, i_div);
+
+        case NODE_LT:
+                return eval_cmp(node, f_lt, l_lt, u_lt, i_lt);
+        case NODE_GT:
+                return eval_cmp(node, f_gt, l_gt, u_gt, i_gt);
+        case NODE_LE:
+                return eval_cmp(node, f_le, l_le, u_le, i_le);
+        case NODE_GE:
+                return eval_cmp(node, f_ge, l_ge, u_ge, i_ge);
+        case NODE_EQ:
+                return eval_cmp(node, f_eq, l_eq, u_eq, i_eq);
+        case NODE_NE:
+                return eval_cmp(node, f_ne, l_ne, u_ne, i_ne);
+
         default:
-                fprintf(stderr, "Unhandled stmt expr type: %d\n", node->type);
-                exit(1);
+                die(node, "Unhandled expr node type: %d", node->type);
         }
 }

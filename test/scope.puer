@@ -1,0 +1,15 @@
+if (10 > 2) {
+        int a = 20;
+        println(a);
+}
+// println(a); // should be error
+
+for (int i = 0; i < 3; i = i + 1) {
+        int b = i * 3;
+        println(b);
+        for (int j = 0; j < 2; j = j + 1) {
+                println(b); // shouldnt be error
+        }
+        // println(j); // should be error
+}
+// println(b); // error

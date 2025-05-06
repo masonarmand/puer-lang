@@ -6,8 +6,8 @@
 #ifndef AST_H
 #define AST_H
 
-#include <stdarg.h>
 #include "var.h"
+#include <stdarg.h>
 
 #define GETCHILD(node, n) ((node)->children[(n)])
 
@@ -49,6 +49,9 @@ typedef struct Node {
         int ival; /* for NODE_NUM */
         char* varname;
         VarType vartype;
+
+        int lineno;
+        int column;
 } Node;
 
 /* ast.c */

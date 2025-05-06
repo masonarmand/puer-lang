@@ -8,6 +8,8 @@
 
 #include "var.h"
 
+void env_push(void);
+void env_pop(void);
 Var* env_get(const char* name);
 void env_set(const char* name, Var val);
 void env_clear();
