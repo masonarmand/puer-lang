@@ -5,6 +5,7 @@
  */
 %code requires {
 #include "var.h"
+#include <stdlib.h>
 }
 
 %locations
@@ -76,8 +77,11 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token PRINT
 %token PRINTLN
 
-%type <node> expr control_stmt stmt block code puer opt_stmt opt_expr
-%type <node> funcdef param_list param return_stmt call
+/* non terminals */
+%type <node> puer code block stmt expr
+%type <node> control_stmt opt_stmt opt_expr
+%type <node> function_def param_list arg_list
+%type <vartype> opt_return
 
 
 %%
@@ -94,6 +98,61 @@ code
     : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
     | code stmt SEMICOLON        { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
     | code control_stmt          { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
+    | code function_def          { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
+    ;
+
+function_def
+    : DEF IDENT LPAREN param_list RPAREN opt_return block
+    {
+        /* children = params + the body of the func */
+        Node* fn = N(NODE_FUNCDEF, @$, 2, $4, $7);
+        fn->varname = $2; /* func name */
+        fn->vartype = $6; /* return type */
+        $$ = fn;
+    }
+    ;
+
+param_list
+    : /* empty */                { $$ = N(NODE_SEQ, @$, 0); }
+    | TYPEKEYWORD IDENT
+    {
+        Node* d = N(NODE_VARDECL, @$, 0);
+        d->varname = $2;
+        d->vartype = $1;
+        $$ = N(NODE_SEQ, @$, 1, d);
+    }
+    | param_list COMMA TYPEKEYWORD IDENT
+    {
+        /* TODO: probably put this in a function */
+        Node* d = N(NODE_VARDECL, @$, 0);
+        int old;
+        d->varname = $4;
+        d->vartype = $3;
+        old = $1->n_children;
+        $1->n_children = old + 1;
+        $1->children = realloc($1->children, sizeof(Node*) * (old + 1));
+        $1->children[old] = d;
+        $$ = $1;
+    }
+    ;
+
+opt_return
+    : /* empty */                { $$ = TYPE_NOP; }
+    | ARROW TYPEKEYWORD          { $$ = $2; }
+    ;
+
+/* function args when calling function */
+arg_list
+    : /*empty */                 { $$ = N(NODE_SEQ, @$, 0); }
+    | expr                       { $$ = N(NODE_SEQ, @$, 1, $1); }
+    | arg_list COMMA expr
+    {
+        int old = $1->n_children;
+        $1->n_children = old + 1;
+        $1->children = realloc($1->children, sizeof(Node*) * (old + 1));
+        $1->children[old] = $3;
+        $$ = $1;
+    }
     ;
 
 control_stmt
@@ -133,6 +192,12 @@ stmt
     | IDENT '=' expr             { $$ = N(NODE_ASSIGN, @$, 1, $3); $$->varname = $1; }
     | BREAK                      { $$ = N(NODE_BREAK, @$, 0); }
     | CONTINUE                   { $$ = N(NODE_CONTINUE, @$, 0); }
+    | IDENT LPAREN arg_list RPAREN
+    {
+        $$ = N(NODE_FUNCCALL, @$, 1, $3);
+        $$->varname = $1;
+    }
+    | RETURN expr                { $$ = N(NODE_RETURN, @$, 1, $2); }
     ;
 
 expr

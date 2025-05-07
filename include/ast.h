@@ -41,20 +41,36 @@ typedef enum {
         NODE_LE,
         NODE_GE,
         NODE_EQ,
-        NODE_NE
+        NODE_NE,
+
+        /* functions */
+        NODE_FUNCDEF,
+        NODE_FUNCCALL,
+        NODE_RETURN
 } NodeType;
+
+typedef struct {
+        char* name;
+        VarType type;
+} FunctionParam;
 
 typedef struct Node {
         NodeType type;
         struct Node** children;
         int n_children;
-        int ival; /* for NODE_NUM */
-        float fval; /* for NODE_FLOAT */
-        char* varname;
-        VarType vartype;
 
+        /* file metadata */
         int lineno;
         int column;
+
+
+        int ival; /* for NODE_NUM */
+        float fval; /* for NODE_FLOAT */
+
+        char* varname; /* function names, variable names, identifiers */
+        VarType vartype; /* VARDECL, PARAM, FUNCDECL type */
+        FunctionParam* params;
+        int n_params;
 } Node;
 
 /* ast.c */

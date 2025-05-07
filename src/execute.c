@@ -2,6 +2,7 @@
 #include "env.h"
 #include "util.h"
 #include "ops.h"
+#include "func.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,7 +17,8 @@ typedef struct {
 typedef enum {
         CTRL_NONE,
         CTRL_BREAK,
-        CTRL_CONTINUE
+        CTRL_CONTINUE,
+        CTRL_RETURN
 } CtrlSignal;
 
 Var eval_expr(Node* node);
@@ -35,6 +37,7 @@ void eval_if(Node* node);
 void eval_ifelse(Node* node);
 void eval_for(Node* node);
 void eval_nop(Node* node);
+void eval_funcdef(Node* node);
 
 static StmtDispatch handlers[] = {
         { NODE_NOP, eval_nop },
@@ -46,6 +49,7 @@ static StmtDispatch handlers[] = {
         { NODE_IF, eval_if },
         { NODE_IFELSE, eval_ifelse },
         { NODE_FOR, eval_for },
+        { NODE_FUNCDEF, eval_funcdef },
         { -1, NULL },
 };
 
@@ -83,6 +87,8 @@ CtrlSignal eval_with_ctrl(Node* node)
                 return eval_if_ctrl(node);
         case NODE_IFELSE:
                 return eval_ifelse_ctrl(node);
+        case NODE_RETURN:
+                return CTRL_RETURN;
         default:
                 eval(node);
                 return CTRL_NONE;
@@ -229,6 +235,33 @@ void eval_nop(Node* node)
         return;
 }
 
+void eval_funcdef(Node* node)
+{
+        Node* plist = node->children[0];
+        Node* body  = node->children[1];
+        int   pcount = plist->n_children;
+        int i;
+
+        printf(
+                "Parsed function `%s` (returns %d) with %d params:\n",
+                node->varname,
+                node->vartype,
+                pcount
+        );
+
+        for (i = 0; i < pcount; i++) {
+                Node *param = plist->children[i];
+                printf("  - %d %s\n", param->vartype, param->varname);
+        }
+
+        /*printf("Body AST:\n");
+        print_ast(body, 0);*/
+}
+
+Var eval_call(Node* node)
+{
+}
+
 Var eval_expr(Node* node)
 {
         Var v;
@@ -249,6 +282,8 @@ Var eval_expr(Node* node)
         case NODE_FLOAT:
                 set_float(&v, node->fval);
                 return v;
+        case NODE_FUNCCALL:
+                return eval_call(node);
         default: {
                 Var a;
                 Var b;

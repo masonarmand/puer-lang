@@ -7,6 +7,45 @@
 #include <stdio.h>
 #include "ast.h"
 
+static const char* node_type_names[] = {
+        [NODE_NOP]      = "NODE_NOP",
+        [NODE_NUM]      = "NODE_NUM",
+        [NODE_FLOAT]    = "NODE_FLOAT",
+        [NODE_ADD]      = "NODE_ADD",
+        [NODE_SUB]      = "NODE_SUB",
+        [NODE_MUL]      = "NODE_MUL",
+        [NODE_DIV]      = "NODE_DIV",
+        [NODE_MOD]      = "NODE_MOD",
+        [NODE_PRINT]    = "NODE_PRINT",
+        [NODE_PRINTLN]  = "NODE_PRINTLN",
+        [NODE_SEQ]      = "NODE_SEQ",
+        [NODE_VAR]      = "NODE_VAR",
+        [NODE_VARDECL]  = "NODE_VARDECL",
+        [NODE_ASSIGN]   = "NODE_ASSIGN",
+        [NODE_IF]       = "NODE_IF",
+        [NODE_IFELSE]   = "NODE_IFELSE",
+        [NODE_FOR]      = "NODE_FOR",
+        [NODE_BREAK]    = "NODE_BREAK",
+        [NODE_CONTINUE] = "NODE_CONTINUE",
+        [NODE_LT]       = "NODE_LT",
+        [NODE_GT]       = "NODE_GT",
+        [NODE_LE]       = "NODE_LE",
+        [NODE_GE]       = "NODE_GE",
+        [NODE_EQ]       = "NODE_EQ",
+        [NODE_NE]       = "NODE_NE",
+        [NODE_FUNCDEF]  = "NODE_FUNCDEF",
+        [NODE_FUNCCALL] = "NODE_FUNCCALL",
+        [NODE_RETURN]   = "NODE_RETURN",
+};
+
+static const char* node_type_to_str(NodeType t)
+{
+        if ((unsigned)t < sizeof(node_type_names)/sizeof(*node_type_names)
+        && node_type_names[t])
+                return node_type_names[t];
+        return "UNKNOWN_NODE";
+}
+
 Node* makeNode(NodeType type, int n_children, ...)
 {
         Node* n = malloc(sizeof(Node));
@@ -32,7 +71,7 @@ void print_ast(Node* node, int depth)
         for (i = 0; i < depth; i++)
                 printf("  ");
 
-        printf("node type: %d\n", node->type);
+        printf("node type: %s\n", node_type_to_str(node->type));
         for (i = 0; i < node->n_children; i++)
                 print_ast(node->children[i], depth + 1);
 }

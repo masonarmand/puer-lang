@@ -1,0 +1,17 @@
+def add(int a, int b) -> int {
+        println();
+        // return a + b;
+}
+
+def mul_f(float a, float b) -> float {
+        println();
+        println();
+        println();
+        println();
+        println();
+        // return a + b;
+}
+
+def void_func() {
+
+}
