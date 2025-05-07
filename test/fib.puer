@@ -1,0 +1,16 @@
+int n = 35;
+
+int a = 0;
+int b = 1;
+
+if (n <= 1)
+        println(n);
+
+else {
+        for (int i = 2; i <= n; i = i + 1) {
+                int temp = a + b;
+                a = b;
+                b = temp;
+        }
+        println(b);
+}
