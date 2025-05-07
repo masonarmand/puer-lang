@@ -192,12 +192,8 @@ stmt
     | IDENT '=' expr             { $$ = N(NODE_ASSIGN, @$, 1, $3); $$->varname = $1; }
     | BREAK                      { $$ = N(NODE_BREAK, @$, 0); }
     | CONTINUE                   { $$ = N(NODE_CONTINUE, @$, 0); }
-    | IDENT LPAREN arg_list RPAREN
-    {
-        $$ = N(NODE_FUNCCALL, @$, 1, $3);
-        $$->varname = $1;
-    }
     | RETURN expr                { $$ = N(NODE_RETURN, @$, 1, $2); }
+    | expr                       { $$ = $1; }
     ;
 
 expr
@@ -221,6 +217,11 @@ expr
                                    $$ = N(NODE_SUB, @$, 2, zero, $2);
                                  }
     | LPAREN expr RPAREN         { $$ = $2; }
+    | IDENT LPAREN arg_list RPAREN
+    {
+        $$ = N(NODE_FUNCCALL, @$, 1, $3);
+        $$->varname = $1;
+    }
     ;
 %%
 

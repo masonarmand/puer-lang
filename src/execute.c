@@ -38,6 +38,8 @@ void eval_ifelse(Node* node);
 void eval_for(Node* node);
 void eval_nop(Node* node);
 void eval_funcdef(Node* node);
+void eval_funccall_stmt(Node* node);
+Var eval_funccall(Node* node);
 
 static StmtDispatch handlers[] = {
         { NODE_NOP, eval_nop },
@@ -50,6 +52,7 @@ static StmtDispatch handlers[] = {
         { NODE_IFELSE, eval_ifelse },
         { NODE_FOR, eval_for },
         { NODE_FUNCDEF, eval_funcdef },
+        { NODE_FUNCCALL, eval_funccall_stmt },
         { -1, NULL },
 };
 
@@ -258,7 +261,11 @@ void eval_funcdef(Node* node)
         print_ast(body, 0);*/
 }
 
-Var eval_call(Node* node)
+void eval_funccall_stmt(Node* node)
+{
+}
+
+Var eval_funccall(Node* node)
 {
 }
 
@@ -283,7 +290,7 @@ Var eval_expr(Node* node)
                 set_float(&v, node->fval);
                 return v;
         case NODE_FUNCCALL:
-                return eval_call(node);
+                return eval_funccall(node);
         default: {
                 Var a;
                 Var b;

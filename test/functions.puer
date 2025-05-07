@@ -15,3 +15,5 @@ def mul_f(float a, float b) -> float {
 def void_func() {
 
 }
+
+add(5, 5);
