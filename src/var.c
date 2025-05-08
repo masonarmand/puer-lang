@@ -47,6 +47,11 @@ float to_long(const Var* v)
         }
 }
 
+void set_void(Var* v)
+{
+        v->type = TYPE_VOID;
+}
+
 void set_int(Var* v, int val)
 {
         v->type = TYPE_INT;

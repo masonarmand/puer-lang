@@ -54,10 +54,13 @@ static Node* set_loc(Node* n, YYLTYPE loc)
         enum VarType vartype;
 }
 
-%left ADD SUB MUL DIV MOD
-%left EQ NE
-%left LT GT LE GE
-%right UMINUS
+%left OR
+%left AND
+%nonassoc EQ NE
+%nonassoc LT GT LE GE
+%left ADD SUB
+%left MUL DIV MOD
+%right NOT UMINUS
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -71,6 +74,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token LBRACE RBRACE
 %token ADD SUB MUL DIV
 %token LT GT LE GE EQ NE
+%token NOT
 %token IF ELSE FOR
 %token BREAK CONTINUE
 %token DEF RETURN ARROW COMMA
@@ -137,7 +141,7 @@ param_list
     ;
 
 opt_return
-    : /* empty */                { $$ = TYPE_NOP; }
+    : /* empty */                { $$ = TYPE_VOID; }
     | ARROW TYPEKEYWORD          { $$ = $2; }
     ;
 
@@ -193,6 +197,7 @@ stmt
     | BREAK                      { $$ = N(NODE_BREAK, @$, 0); }
     | CONTINUE                   { $$ = N(NODE_CONTINUE, @$, 0); }
     | RETURN expr                { $$ = N(NODE_RETURN, @$, 1, $2); }
+    | RETURN                     { $$ = N(NODE_RETURN, @$, 0); $$->vartype = TYPE_VOID; }
     | expr                       { $$ = $1; }
     ;
 
@@ -222,6 +227,7 @@ expr
         $$ = N(NODE_FUNCCALL, @$, 1, $3);
         $$->varname = $1;
     }
+    | NOT expr                   { $$ = N(NODE_NOT, @$, 1, $2); }
     ;
 %%
 

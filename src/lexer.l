@@ -49,6 +49,7 @@ int yycolumn = 1;
 "*"                      return MUL;
 "/"                      return DIV;
 "%"                      return MOD;
+"!"                      return NOT;
 
 "=="                     return EQ;
 "!="                     return NE;

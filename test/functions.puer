@@ -1,19 +1,71 @@
-def add(int a, int b) -> int {
-        println();
-        // return a + b;
+
+def output()
+{
+        println(200);
 }
 
-def mul_f(float a, float b) -> float {
-        println();
-        println();
-        println();
-        println();
-        println();
-        // return a + b;
+def square(int x) -> int
+{
+        return x * x;
 }
 
-def void_func() {
-
+def add(int a, int b) -> int
+{
+        return a + b;
 }
 
-add(5, 5);
+def double_sum(int a, int b) -> int
+{
+        return add(a, b) * 2;
+}
+
+def output_and_return(int n) -> int
+{
+        output();
+        return n;
+}
+
+def fib(int n) -> int
+{
+        if (n <= 1)
+                return n;
+        return fib(n - 1) + fib(n - 2);
+}
+
+def retnoexpr()
+{
+        println(0);
+        return;
+}
+
+// nested return
+def is_even(int a) -> int
+{
+        if (a % 2 == 0)
+                return 1;
+        return 0;
+}
+
+def is_odd(int a) -> int
+{
+        return (a % 2 != 0);
+}
+
+output(); // 200
+int result1 = square(4);
+println(result1); // 16
+
+int result2 = add(10, 5);
+println(result2); // 15
+
+int result3 = double_sum(3, 7);
+println(result3); // 20
+
+int result4 = output_and_return(42);
+println(result4); // 42
+
+// Test recursive fib
+int result5 = fib(6);
+println(result5); // 8
+
+retnoexpr(); // 0

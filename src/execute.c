@@ -21,6 +21,9 @@ typedef enum {
         CTRL_RETURN
 } CtrlSignal;
 
+/* function return value */
+static Var g_retval;
+
 Var eval_expr(Node* node);
 
 CtrlSignal eval_with_ctrl(Node* node);
@@ -91,6 +94,10 @@ CtrlSignal eval_with_ctrl(Node* node)
         case NODE_IFELSE:
                 return eval_ifelse_ctrl(node);
         case NODE_RETURN:
+                if (node->n_children == 0)
+                        set_void(&g_retval);
+                else
+                        g_retval = eval_expr(node->children[0]);
                 return CTRL_RETURN;
         default:
                 eval(node);
@@ -240,6 +247,7 @@ void eval_nop(Node* node)
 
 void eval_funcdef(Node* node)
 {
+        /*
         Node* plist = node->children[0];
         Node* body  = node->children[1];
         int   pcount = plist->n_children;
@@ -255,7 +263,8 @@ void eval_funcdef(Node* node)
         for (i = 0; i < pcount; i++) {
                 Node *param = plist->children[i];
                 printf("  - %d %s\n", param->vartype, param->varname);
-        }
+        }*/
+        func_set(node->varname, node);
 
         /*printf("Body AST:\n");
         print_ast(body, 0);*/
@@ -263,10 +272,59 @@ void eval_funcdef(Node* node)
 
 void eval_funccall_stmt(Node* node)
 {
+        (void)eval_funccall(node);
 }
 
 Var eval_funccall(Node* node)
 {
+        Node* func = func_get(node->varname);
+        Node* param_list;
+        Node* body;
+        int expected;
+        int given;
+        int i;
+        CtrlSignal sig;
+
+        if (!func)
+                die(node, "undefined function '%s'", node->varname);
+
+        param_list = func->children[0];
+        body = func->children[1];
+
+        expected = param_list->n_children;
+        given = node->children[0]->n_children;
+
+        if (expected != given)
+                die(node, "function '%s' expects %d args, got %d", node->varname, expected, given);
+
+        env_push();
+        for (i = 0; i < expected; i++) {
+                Node* param = param_list->children[i];
+                Node* arg_expr = node->children[0]->children[i];
+                Var arg_val = eval_expr(arg_expr);
+
+                if (arg_val.type != param->vartype) {
+                        die(node, "function '%s' argument %d: expected type %d, got %d",
+                                node->varname, i + 1, param->vartype, arg_val.type);
+                }
+                env_set(param->varname, arg_val);
+        }
+
+        sig = eval_with_ctrl(body);
+        if (sig == CTRL_RETURN) {
+                if (g_retval.type != func->vartype) {
+                        die(node, "function '%s': return type mismatch (expected %d, got %d)",
+                                node->varname, func->vartype, g_retval.type);
+                }
+        }
+        else {
+                if (func->vartype != TYPE_VOID)
+                        die(node, "function '%s': missing return value", node->varname);
+                set_void(g_retval);
+        }
+
+        env_pop();
+        return g_retval;
 }
 
 Var eval_expr(Node* node)
@@ -291,6 +349,15 @@ Var eval_expr(Node* node)
                 return v;
         case NODE_FUNCCALL:
                 return eval_funccall(node);
+        case NODE_NOT: {
+                Var inner = eval_expr(node->children[0]);
+                Var result;
+                if (inner.type != TYPE_BOOL && inner.type != TYPE_INT) {
+                        die(node, "`!` operator requires boolean or integer type");
+                }
+                set_int(&result, !as_int(inner));
+                return result;
+        }
         default: {
                 Var a;
                 Var b;

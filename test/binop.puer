@@ -1,0 +1,12 @@
+def is_even(int a) -> int
+{
+        return a % 2 == 0;
+}
+
+def is_odd(int a) -> int
+{
+        return !(is_even(a));
+}
+
+println(is_even(5)); // 0
+println(is_odd(5));  // 1

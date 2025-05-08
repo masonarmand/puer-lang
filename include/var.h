@@ -13,7 +13,7 @@ typedef enum VarType {
         TYPE_FLOAT,
         TYPE_BOOL,
         TYPE_STRING,
-        TYPE_NOP
+        TYPE_VOID
 } VarType;
 
 typedef struct Var {
