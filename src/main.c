@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "puerlib.h"
 #include <stdio.h>
 
 extern int yyparse();
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
 
         if (yyparse() == 0) {
                 /*print_ast(root, 0);*/
+                init_puerlib();
                 eval(root);
         }
 

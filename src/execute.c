@@ -3,6 +3,7 @@
 #include "util.h"
 #include "ops.h"
 #include "func.h"
+#include "builtin.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,8 +25,6 @@ typedef enum {
 /* function return value */
 static Var g_retval;
 
-Var eval_expr(Node* node);
-
 CtrlSignal eval_with_ctrl(Node* node);
 CtrlSignal eval_if_ctrl(Node* node);
 CtrlSignal eval_ifelse_ctrl(Node* node);
@@ -39,6 +38,7 @@ void eval_assign(Node* node);
 void eval_if(Node* node);
 void eval_ifelse(Node* node);
 void eval_for(Node* node);
+void eval_while(Node* node);
 void eval_nop(Node* node);
 void eval_funcdef(Node* node);
 void eval_funccall_stmt(Node* node);
@@ -55,6 +55,7 @@ static StmtDispatch handlers[] = {
         { NODE_IF, eval_if },
         { NODE_IFELSE, eval_ifelse },
         { NODE_FOR, eval_for },
+        { NODE_WHILE, eval_while },
         { NODE_FUNCDEF, eval_funcdef },
         { NODE_FUNCCALL, eval_funccall_stmt },
         { NODE_IDXASSIGN, eval_idxassign },
@@ -253,6 +254,18 @@ void eval_for(Node* node)
         env_pop();
 }
 
+void eval_while(Node* node)
+{
+        while(as_int(eval_expr(node->children[0]))) {
+                CtrlSignal sig = eval_block(node->children[1]);
+                if (sig == CTRL_BREAK)
+                        break;
+                if (sig == CTRL_CONTINUE) {
+                        continue;
+                }
+        }
+}
+
 void eval_nop(Node* node)
 {
         return;
@@ -290,15 +303,19 @@ void eval_funccall_stmt(Node* node)
 
 Var eval_funccall(Node* node)
 {
-        Node* func = func_get(node->varname);
+        Node* func;
         Node* param_list;
         Node* body;
         int expected;
         int given;
         int i;
         CtrlSignal sig;
+        Var result;
 
-        if (!func)
+        if (call_builtin_if_exists(node, &result))
+                return result;
+
+        if (!(func = func_get(node->varname)))
                 die(node, "undefined function '%s'", node->varname);
 
         param_list = func->children[0];

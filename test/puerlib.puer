@@ -1,0 +1,15 @@
+testlib();
+str in = input("Enter something: ");
+println("You entered:", in);
+
+print("testing getch: ");
+int c = getch();
+println("You pressed Ascii code:", c);
+
+println("Testing getch in loop. Press q to stop");
+
+// while ((c = getch()) != 'q') {
+for (c = getch(); c != 'q'; c = getch()) {
+        println(c);
+}
+

@@ -40,6 +40,7 @@ typedef enum {
         NODE_IF,
         NODE_IFELSE,
         NODE_FOR,
+        NODE_WHILE,
         NODE_BREAK,
         NODE_CONTINUE,
 
@@ -87,5 +88,6 @@ void print_ast(Node* node, int depth);
 
 /* execute.c */
 void eval(Node* node);
+Var eval_expr(Node* node);
 
 #endif

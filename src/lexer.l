@@ -84,6 +84,7 @@ int yycolumn = 1;
 "if"                     return IF;
 "else"                   return ELSE;
 "for"                    return FOR;
+"while"                  return WHILE;
 "break"                  return BREAK;
 "continue"               return CONTINUE;
 

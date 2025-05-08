@@ -83,7 +83,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token LT GT LE GE EQ NE
 %token NOT
 %token AND OR
-%token IF ELSE FOR
+%token IF ELSE FOR WHILE
 %token BREAK CONTINUE
 %token DEF RETURN ARROW COMMA
 %token PRINT
@@ -179,6 +179,10 @@ control_stmt
     | FOR LPAREN opt_stmt SEMICOLON opt_expr SEMICOLON opt_stmt RPAREN block
                                  {
                                    $$ = N(NODE_FOR, @$, 4, $3, $5, $7, $9);
+                                 }
+    | WHILE LPAREN expr RPAREN block
+                                 {
+                                   $$ = N(NODE_WHILE, @$, 2, $3, $5);
                                  }
     ;
 
