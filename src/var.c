@@ -2,6 +2,14 @@
 
 #include <stdlib.h>
 
+VarType coerce(Var* a, Var* b)
+{
+        VarType type = common_type(a->type, b->type);
+        cast_to(a, type);
+        cast_to(b, type);
+        return type;
+}
+
 VarType common_type(VarType a, VarType b)
 {
         if (a == b)
@@ -13,6 +21,47 @@ VarType common_type(VarType a, VarType b)
         if (a == TYPE_UINT || b == TYPE_UINT)
                 return TYPE_UINT;
         return TYPE_INT;
+}
+
+void cast_to(Var* v, VarType target)
+{
+        if (v->type == target)
+                return;
+
+        switch (target) {
+        case TYPE_FLOAT:
+                switch (v->type) {
+                case TYPE_INT:
+                        v->data.f = (float)v->data.i;
+                        break;
+                case TYPE_UINT:
+                        v->data.f = (float)v->data.ui;
+                        break;
+                case TYPE_LONG:
+                        v->data.f = (float)v->data.l;
+                        break;
+                default: die(NULL, "cannot cast to float");
+                }
+                v->type = TYPE_FLOAT;
+                break;
+        case TYPE_INT:
+                switch (v->type) {
+                case TYPE_FLOAT:
+                        v->data.i = (int)v->data.f;
+                        break;
+                case TYPE_UINT:
+                        v->data.i = (int)v->data.ui;
+                        break;
+                case TYPE_LONG:
+                        v->data.i = (int)v->data.l;
+                        break;
+                default: die(NULL, "cannot cast to int");
+                }
+                v->type = TYPE_INT;
+                break;
+        default:
+                die(NULL, "unsupported coercion to type %d", target);
+        }
 }
 
 float to_float(const Var* v)

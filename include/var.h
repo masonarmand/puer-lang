@@ -31,7 +31,9 @@ typedef struct Var {
         int is_const;
 } Var;
 
+VarType coerce(Var* a, Var* b);
 VarType common_type(VarType a, VarType b);
+void cast_to(Var* v, VarType target);
 float to_float(const Var* v);
 float to_long(const Var* v);
 void set_int(Var* v, int val);

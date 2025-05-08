@@ -391,7 +391,8 @@ Var eval_expr(Node* node)
 
                 a = eval_expr(node->children[0]);
                 b = eval_expr(node->children[1]);
-                type = common_type(a.type, b.type);
+                /*type = common_type(a.type, b.type);*/
+                type = coerce(&a, &b);
                 func = type_ops[type].ops[op];
 
                 if (!func)
