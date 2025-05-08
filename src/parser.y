@@ -75,6 +75,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token ADD SUB MUL DIV
 %token LT GT LE GE EQ NE
 %token NOT
+%token AND OR
 %token IF ELSE FOR
 %token BREAK CONTINUE
 %token DEF RETURN ARROW COMMA
@@ -228,6 +229,8 @@ expr
         $$->varname = $1;
     }
     | NOT expr                   { $$ = N(NODE_NOT, @$, 1, $2); }
+    | expr AND expr              { $$ = N(NODE_AND, @$, 2, $1, $3); }
+    | expr OR expr               { $$ = N(NODE_OR, @$, 2, $1, $3); }
     ;
 %%
 

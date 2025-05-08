@@ -10,3 +10,8 @@ def is_odd(int a) -> int
 
 println(is_even(5)); // 0
 println(is_odd(5));  // 1
+println(is_even(4) && is_odd(5)); // 1
+println(is_even(4) && is_odd(4)); // 0
+
+println(is_even(4) || is_odd(4)); // 1
+println(is_even(5) || is_odd(5)); // 1

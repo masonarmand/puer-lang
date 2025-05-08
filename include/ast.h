@@ -21,6 +21,8 @@ typedef enum {
         NODE_DIV,
         NODE_MOD,
         NODE_NOT,
+        NODE_AND,
+        NODE_OR,
         NODE_PRINT,
         NODE_PRINTLN,
         NODE_SEQ,

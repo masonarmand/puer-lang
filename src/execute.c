@@ -351,12 +351,33 @@ Var eval_expr(Node* node)
                 return eval_funccall(node);
         case NODE_NOT: {
                 Var inner = eval_expr(node->children[0]);
-                Var result;
                 if (inner.type != TYPE_BOOL && inner.type != TYPE_INT) {
                         die(node, "`!` operator requires boolean or integer type");
                 }
-                set_int(&result, !as_int(inner));
-                return result;
+                set_int(&v, !as_int(inner));
+                return v;
+        }
+        case NODE_AND: {
+                Var left = eval_expr(node->children[0]);
+                Var right;
+                if (!as_int(left)) {
+                        set_int(&left, 0);
+                        return left;
+                }
+                right = eval_expr(node->children[1]);
+                set_int(&right, as_int(right));
+                return right;
+        }
+        case NODE_OR: {
+                Var left = eval_expr(node->children[0]);
+                Var right;
+                if (as_int(left)) {
+                        set_int(&left, 1);
+                        return left;
+                }
+                right = eval_expr(node->children[1]);
+                set_int(&right, as_int(right));
+                return right;
         }
         default: {
                 Var a;
