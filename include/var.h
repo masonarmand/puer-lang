@@ -6,6 +6,8 @@
 #ifndef VAR_H
 #define VAR_H
 
+#include "puerstring.h"
+
 typedef enum VarType {
         TYPE_INT,
         TYPE_UINT,
@@ -25,7 +27,7 @@ typedef struct Var {
                 long l;
                 int b;
                 float f;
-                char* s;
+                String* s;
         } data;
 
         int is_const;

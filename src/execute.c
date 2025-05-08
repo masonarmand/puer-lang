@@ -42,6 +42,7 @@ void eval_for(Node* node);
 void eval_nop(Node* node);
 void eval_funcdef(Node* node);
 void eval_funccall_stmt(Node* node);
+void eval_idxassign(Node* node);
 Var eval_funccall(Node* node);
 
 static StmtDispatch handlers[] = {
@@ -56,6 +57,7 @@ static StmtDispatch handlers[] = {
         { NODE_FOR, eval_for },
         { NODE_FUNCDEF, eval_funcdef },
         { NODE_FUNCCALL, eval_funccall_stmt },
+        { NODE_IDXASSIGN, eval_idxassign },
         { -1, NULL },
 };
 
@@ -157,7 +159,7 @@ void eval_print(Node* node)
                         /* TODO (data == 1) ? "true" : "false" */
                         break;
                 case TYPE_STRING:
-                        printf("%s", v.data.s);
+                        printf("%s", v.data.s->data);
                         break;
                 default:
                         die(node, "unsupported type in print");
@@ -192,6 +194,9 @@ void eval_vardecl(Node* node)
                         die(node, "init expr type mismatch for '%s'", node->varname);
                 }
                 v = result;
+        }
+        else if (v.type == TYPE_STRING) {
+                v.data.s = string_new("");
         }
 
         env_set(node->varname, v);
@@ -335,6 +340,20 @@ Var eval_funccall(Node* node)
         return g_retval;
 }
 
+void eval_idxassign(Node* node)
+{
+        Var str = eval_expr(node->children[0]);
+        Var idx = eval_expr(node->children[1]);
+        Var val = eval_expr(node->children[2]);
+        char c;
+
+        if (str.type != TYPE_STRING || idx.type != TYPE_INT || val.type != TYPE_INT)
+                die(node, "Invalid types for string index assignment");
+
+        c = (char)val.data.i;
+        string_set(str.data.s, idx.data.i, c);
+}
+
 Var eval_expr(Node* node)
 {
         Var v;
@@ -357,6 +376,9 @@ Var eval_expr(Node* node)
                 return v;
         case NODE_STRING:
                 set_string(&v, node->varname);
+                return v;
+        case NODE_CHAR:
+                set_int(&v, node->ival);
                 return v;
         case NODE_FUNCCALL:
                 return eval_funccall(node);
@@ -390,6 +412,18 @@ Var eval_expr(Node* node)
                 set_int(&right, as_int(right));
                 return right;
         }
+        case NODE_IDX: {
+                Var str = eval_expr(node->children[0]);
+                Var idx = eval_expr(node->children[1]);
+                char c;
+
+                if (str.type != TYPE_STRING || idx.type != TYPE_INT)
+                        die(node, "Invalid types for indexing (expected str[int])");
+
+                c = string_get(str.data.s, idx.data.i);
+                set_int(&v, (int)c); /*TODO change to char when char type is added*/
+                return v;
+        }
         default: {
                 Var a;
                 Var b;
@@ -403,7 +437,17 @@ Var eval_expr(Node* node)
                 a = eval_expr(node->children[0]);
                 b = eval_expr(node->children[1]);
                 /*type = common_type(a.type, b.type);*/
+
+                /* overide '+' for string concat */
+                if (a.type == TYPE_STRING && b.type == TYPE_STRING && op == OP_ADD) {
+                        Var result;
+                        result.type = TYPE_STRING;
+                        result.data.s = string_concat(a.data.s, b.data.s);
+                        return result;
+                }
+
                 type = coerce(&a, &b);
+
                 func = type_ops[type].ops[op];
 
                 if (!func)

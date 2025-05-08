@@ -16,6 +16,7 @@ typedef enum {
         NODE_NUM,
         NODE_FLOAT,
         NODE_STRING,
+        NODE_CHAR,
         NODE_ADD,
         NODE_SUB,
         NODE_MUL,
@@ -31,6 +32,9 @@ typedef enum {
         NODE_VAR,
         NODE_VARDECL,
         NODE_ASSIGN,
+
+        NODE_IDX,
+        NODE_IDXASSIGN,
 
         /* control flow */
         NODE_IF,

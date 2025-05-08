@@ -129,7 +129,7 @@ void set_long(Var* v, long val)
 void set_string(Var* v, const char* val)
 {
         v->type = TYPE_STRING;
-        v->data.s = strdup(val);
+        v->data.s = string_new(val);
 }
 
 int as_int(Var v)
@@ -154,12 +154,4 @@ float as_float(Var v)
                 die("Expected float, got type %d\n", v.type);
         }
         return v.data.f;
-}
-
-char* as_string(Var v)
-{
-        if (v.type != TYPE_STRING) {
-                die("Expected string, got type %d\n", v.type);
-        }
-        return v.data.s;
 }

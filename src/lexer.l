@@ -44,11 +44,24 @@ int yycolumn = 1;
 [0-9]+\.[0-9]+           { yylval.fval = atof(yytext); return FLOAT; }
 [0-9]+                   { yylval.ival = atoi(yytext); return NUM; }
 
+
 \"([^\\\"]|\\.)*\" {
         yylval.ident = strdup(yytext + 1);
         yylval.ident[strlen(yylval.ident) - 1] = '\0';
         return STRING;
 }
+
+'[^\\']' {
+    yylval.ival = yytext[1];
+    return CHAR;
+}
+
+'\\n'    { yylval.ival = '\n'; return CHAR; }
+'\\t'    { yylval.ival = '\t'; return CHAR; }
+'\\r'    { yylval.ival = '\r'; return CHAR; }
+'\\\\'   { yylval.ival = '\\'; return CHAR; }
+'\\\''   { yylval.ival = '\''; return CHAR; }
+
 
 "+"                      return ADD;
 "-"                      return SUB;
@@ -86,11 +99,14 @@ int yycolumn = 1;
 ")"                      return RPAREN;
 "{"                      return LBRACE;
 "}"                      return RBRACE;
+"["                      return LBRACKET;
+"]"                      return RBRACKET;
 
 "int"                    { yylval.vartype = TYPE_INT; return TYPEKEYWORD; }
 "uint"                   { yylval.vartype = TYPE_UINT; return TYPEKEYWORD; }
 "long"                   { yylval.vartype = TYPE_LONG; return TYPEKEYWORD; }
 "float"                  { yylval.vartype = TYPE_FLOAT; return TYPEKEYWORD; }
+"str"                    { yylval.vartype = TYPE_STRING; return TYPEKEYWORD; }
 
 [a-zA-Z_][a-zA-Z0-9_]*   { yylval.ident = strdup(yytext); return IDENT; }
 

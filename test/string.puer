@@ -1,0 +1,18 @@
+str a = "hello";
+str b = " world";
+str s = a + b;
+println(s); // hello world
+
+s[5] = '_';
+println(s);
+
+println(s[0]); // 104
+
+str d;
+println("string 'd' is:", d); // blank
+d = "now not blank";
+println("string 'd' is:", d); // now not blank
+
+
+println(a + b); //hello world
+println(a, b);  //hello  world

@@ -64,15 +64,21 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %nonassoc IFX
 %nonassoc ELSE
 
+%nonassoc ASSIGN
+%left LBRACKET RBRACKET
+
+
 %token <ival> NUM
 %token <fval> FLOAT
 %token <vartype> TYPEKEYWORD
 %token <ident> IDENT
 %token <ident> STRING
+%token <ival> CHAR
 
 %token SEMICOLON
 %token LPAREN RPAREN
 %token LBRACE RBRACE
+%token LBRACKET RBRACKET
 %token ADD SUB MUL DIV
 %token LT GT LE GE EQ NE
 %token NOT
@@ -201,6 +207,10 @@ stmt
     | RETURN expr                { $$ = N(NODE_RETURN, @$, 1, $2); }
     | RETURN                     { $$ = N(NODE_RETURN, @$, 0); $$->vartype = TYPE_VOID; }
     | expr                       { $$ = $1; }
+    | expr LBRACKET expr RBRACKET '=' expr %prec ASSIGN
+    {
+         $$ = N(NODE_IDXASSIGN, @$, 3, $1, $3, $6);
+    }
     ;
 
 expr
@@ -208,6 +218,7 @@ expr
     | FLOAT                      { $$ = N(NODE_FLOAT, @1, 0); $$->fval = $1; }
     | IDENT                      { $$ = N(NODE_VAR, @1, 0); $$->varname = $1; }
     | STRING                     { $$ = N(NODE_STRING, @1, 0); $$->varname = $1; }
+    | CHAR                       { $$ = N(NODE_CHAR, @1, 0); $$->ival = $1; }
     | expr LT expr               { $$ = N(NODE_LT, @$, 2, $1, $3); }
     | expr GT expr               { $$ = N(NODE_GT, @$, 2, $1, $3); }
     | expr LE expr               { $$ = N(NODE_LE, @$, 2, $1, $3); }
@@ -233,6 +244,7 @@ expr
     | NOT expr                   { $$ = N(NODE_NOT, @$, 1, $2); }
     | expr AND expr              { $$ = N(NODE_AND, @$, 2, $1, $3); }
     | expr OR expr               { $$ = N(NODE_OR, @$, 2, $1, $3); }
+    | expr LBRACKET expr RBRACKET { $$ = N(NODE_IDX, @$, 2, $1, $3); }
     ;
 %%
 
