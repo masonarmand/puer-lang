@@ -1,6 +1,7 @@
 # TODO
 - [X] make `eval_expr` return generic Var type instead of int
-- [ ] an extensible way to add builtin functions without adding anything to parser or parse tree.
+- [X] an extensible way to add builtin functions without adding anything to parser or parse tree.
+- [ ] Make assignment statements work as expressions for example: `while(var = isTrue())`
 - [ ] add in support for more basic types:
     - [ ] `uint` (unsigned integer)
     - [ ] `long`
@@ -9,10 +10,13 @@
     - [ ] `char`
     - [ ] `bool`
     - [X] mixed type coersion
-- [ ] More control flow statements:
+- [X] More control flow statements:
     - [X] for loop
-    - [ ] while loop
-- [ ] input()
+    - [X] while loop
+- [ ] standard library / builtin functions:
+    - [X] `input()`
+    - [X] `getch()`
+    - [ ] ...
 - [ ] Record/struct with members
 - [X] Basic procedures
 - [X] functions with return types and args
