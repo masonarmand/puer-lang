@@ -136,28 +136,36 @@ void eval_seq(Node* node)
 
 void eval_print(Node* node)
 {
-        Var v = eval_expr(node->children[0]);
-        switch (v.type) {
-        case TYPE_INT:
-                printf("%d", v.data.i);
-                break;
-        case TYPE_UINT:
-                printf("%u", v.data.ui);
-                break;
-        case TYPE_LONG:
-                printf("%ld", v.data.l);
-                break;
-        case TYPE_FLOAT:
-                printf("%f", v.data.f);
-                break;
-        case TYPE_BOOL:
-                /* TODO (data == 1) ? "true" : "false" */
-                break;
-        case TYPE_STRING:
-                printf("%s", v.data.s);
-                break;
-        default:
-                die(node, "unsupported type in print");
+        Node* args = node->children[0];
+        unsigned int i;
+        for (i = 0; i < args->n_children; i++) {
+                Var v = eval_expr(args->children[i]);
+                switch (v.type) {
+                case TYPE_INT:
+                        printf("%d", v.data.i);
+                        break;
+                case TYPE_UINT:
+                        printf("%u", v.data.ui);
+                        break;
+                case TYPE_LONG:
+                        printf("%ld", v.data.l);
+                        break;
+                case TYPE_FLOAT:
+                        printf("%f", v.data.f);
+                        break;
+                case TYPE_BOOL:
+                        /* TODO (data == 1) ? "true" : "false" */
+                        break;
+                case TYPE_STRING:
+                        printf("%s", v.data.s);
+                        break;
+                default:
+                        die(node, "unsupported type in print");
+                }
+
+                /* spaces between args */
+                if (i < args->n_children - 1)
+                        printf(" ");
         }
 }
 

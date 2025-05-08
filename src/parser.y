@@ -189,8 +189,8 @@ opt_expr
     ;
 
 stmt
-    : PRINT LPAREN expr RPAREN   { $$ = N(NODE_PRINT, @$, 1, $3); }
-    | PRINTLN LPAREN opt_expr RPAREN { $$ = N(NODE_PRINTLN, @$, 1, $3); }
+    : PRINT LPAREN arg_list RPAREN   { $$ = N(NODE_PRINT, @$, 1, $3); }
+    | PRINTLN LPAREN arg_list RPAREN { $$ = N(NODE_PRINTLN, @$, 1, $3); }
 
     /* variable declarations & assignments */
     | TYPEKEYWORD IDENT          { $$ = N(NODE_VARDECL, @$, 0); $$->varname = $2; $$->vartype = $1; }

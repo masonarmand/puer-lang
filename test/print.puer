@@ -1,8 +1,14 @@
-print(1);
-print(2);
-print(3);
-print(4);
-print(5);
+int a = 10;
+float f = 20.0;
 
-println(0);
-println(100);
+println("Hello world!");
+
+println("Int a value:", a, "float f value:", f);
+
+println("Check out this cube");
+for (int y = 0; y < 10; y = y + 1) {
+        for (int x = 0; x < 10; x = x + 1) {
+                print("#");
+        }
+        println();
+}
