@@ -1,6 +1,7 @@
 #include "var.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 VarType coerce(Var* a, Var* b)
 {
@@ -125,10 +126,10 @@ void set_long(Var* v, long val)
         v->data.l = val;
 }
 
-void set_string(Var* v, char* val)
+void set_string(Var* v, const char* val)
 {
         v->type = TYPE_STRING;
-        v->data.s = val;
+        v->data.s = strdup(val);
 }
 
 int as_int(Var v)

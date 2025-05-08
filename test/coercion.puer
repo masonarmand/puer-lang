@@ -1,0 +1,13 @@
+def weighted_sum(int x, float weight) -> float
+{
+        return x * weight + 0.5;
+}
+
+float a = weighted_sum(3, 1.5);    // expected: 3 * 1.5 + 0.5 = 5.0
+println(a);
+
+float b = weighted_sum(10, 2.0);   // expected: 10 * 2.0 + 0.5 = 20.5
+println(b);
+
+float c = weighted_sum(4, 0.25);   // expected: 4 * 0.25 + 0.5 = 1.5
+println(c);

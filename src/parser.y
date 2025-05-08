@@ -68,6 +68,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token <fval> FLOAT
 %token <vartype> TYPEKEYWORD
 %token <ident> IDENT
+%token <ident> STRING
 
 %token SEMICOLON
 %token LPAREN RPAREN
@@ -206,6 +207,7 @@ expr
     : NUM                        { $$ = N(NODE_NUM, @1, 0); $$->ival = $1; }
     | FLOAT                      { $$ = N(NODE_FLOAT, @1, 0); $$->fval = $1; }
     | IDENT                      { $$ = N(NODE_VAR, @1, 0); $$->varname = $1; }
+    | STRING                     { $$ = N(NODE_STRING, @1, 0); $$->varname = $1; }
     | expr LT expr               { $$ = N(NODE_LT, @$, 2, $1, $3); }
     | expr GT expr               { $$ = N(NODE_GT, @$, 2, $1, $3); }
     | expr LE expr               { $$ = N(NODE_LE, @$, 2, $1, $3); }

@@ -44,6 +44,12 @@ int yycolumn = 1;
 [0-9]+\.[0-9]+           { yylval.fval = atof(yytext); return FLOAT; }
 [0-9]+                   { yylval.ival = atoi(yytext); return NUM; }
 
+\"([^\\\"]|\\.)*\" {
+        yylval.ident = strdup(yytext + 1);
+        yylval.ident[strlen(yylval.ident) - 1] = '\0';
+        return STRING;
+}
+
 "+"                      return ADD;
 "-"                      return SUB;
 "*"                      return MUL;

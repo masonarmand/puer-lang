@@ -347,6 +347,9 @@ Var eval_expr(Node* node)
         case NODE_FLOAT:
                 set_float(&v, node->fval);
                 return v;
+        case NODE_STRING:
+                set_string(&v, node->varname);
+                return v;
         case NODE_FUNCCALL:
                 return eval_funccall(node);
         case NODE_NOT: {
