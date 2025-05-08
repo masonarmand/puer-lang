@@ -1,18 +1,24 @@
 # TODO
-- [*] make eval_expr return generic Var type instead of int
+- [X] make `eval_expr` return generic Var type instead of int
+- [ ] an extensible way to add builtin functions without adding anything to parser or parse tree.
 - [ ] add in support for more basic types:
-    - [ ] uint (unsigned integer)
-    - [ ] long
-    - [*] float
-    - [ ] mixed type coersion
+    - [ ] `uint` (unsigned integer)
+    - [ ] `long`
+    - [X] `float`
+    - [X] `str`
+    - [ ] `char`
+    - [ ] `bool`
+    - [X] mixed type coersion
 - [ ] More control flow statements:
-    - [*] for loop
+    - [X] for loop
     - [ ] while loop
 - [ ] input()
 - [ ] Record/struct with members
-- [ ] Basic procedures
-- [ ] functions with return types and args
-- [ ] @require preprocessing
+- [X] Basic procedures
+- [X] functions with return types and args
+- [ ] `@require` preprocessing
+    - Or `include`, idk haven't decided on name or syntax or mechanism for how this would
+    work
 
 ## other
 - [ ] Garbage collection
@@ -21,6 +27,5 @@
     - [ ] Binding to raylib library
 - [ ] Other types:
     - [ ] Dynamic Arrays
-    - [ ] Strings (char array)
 - [ ] Shorthand expressions ++, --, +=, etc
 - [ ] Basic module/namespace system
