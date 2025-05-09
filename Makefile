@@ -15,12 +15,12 @@ SRC_FILES = $(SRC)/*.c
 
 .PHONY: all build clean run
 
-all: build
+all: clean build
 
 build: $(EXEC)
 
 $(EXEC): $(SRC_FILES)
-	bison -d -o $(SRC)/parser.tab.c $(SRC)/parser.y
+	bison -v -d -o $(SRC)/parser.tab.c $(SRC)/parser.y
 	flex -o $(SRC)/lexer.yy.c $(SRC)/lexer.l
 	$(CC) $(CFLAGS) $(SRC_FILES) $(LDFLAGS) -o $(EXEC)
 	rm -f $(SRC)/parser.tab.* $(SRC)/lexer.yy.c
@@ -29,4 +29,4 @@ run:
 	./$(EXEC)
 
 clean:
-	rm -f $(EXEC) $(SRC)/parser.tab.* $(SRC)/lexer.yy.c
+	rm -f $(EXEC) $(SRC)/parser.tab.* $(SRC)/lexer.yy.c $(SRC)/parser.output
