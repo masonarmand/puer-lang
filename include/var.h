@@ -8,6 +8,8 @@
 
 #include "puerstring.h"
 
+typedef struct ArrayList ArrayList;
+
 typedef enum VarType {
         TYPE_INT,
         TYPE_UINT,
@@ -15,6 +17,7 @@ typedef enum VarType {
         TYPE_FLOAT,
         TYPE_BOOL,
         TYPE_STRING,
+        TYPE_ARRAY,
         TYPE_VOID
 } VarType;
 
@@ -28,10 +31,18 @@ typedef struct Var {
                 int b;
                 float f;
                 String* s;
+                ArrayList* a;
         } data;
 
         int is_const;
 } Var;
+
+typedef struct ArrayList {
+        VarType type;
+        Var* items;
+        int size;
+        int capacity;
+} ArrayList;
 
 VarType coerce(Var* a, Var* b);
 VarType common_type(VarType a, VarType b);

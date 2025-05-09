@@ -92,6 +92,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 /* non terminals */
 %type <node> puer code block stmt expr
 %type <node> control_stmt opt_stmt opt_expr
+%type <node> array_items dims opt_initializer
 %type <node> function_def param_list arg_list
 %type <vartype> opt_return
 
@@ -198,11 +199,50 @@ opt_expr
     | expr                       { $$ = $1; }
     ;
 
+opt_initializer
+    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
+    | '=' expr                   { $$ = $2; }
+    ;
+
+dims
+    : LBRACKET NUM RBRACKET
+    {
+        Node* d = N(NODE_NUM, @$, 0);
+        d->ival = $2;
+        $$ = N(NODE_SEQ, @$, 1, d);
+    }
+    | dims '[' NUM ']'
+    {
+        Node *seq = $1;
+        Node *d   = N(NODE_NUM, @$, 0);
+        d->ival   = $3;
+
+        int old = seq->n_children;
+        seq->n_children = old + 1;
+        seq->children = realloc(
+            seq->children,
+            sizeof(Node*) * seq->n_children
+        );
+        seq->children[old] = d;
+
+        $$ = seq;
+    }
+    ;
+
 stmt
     : PRINT LPAREN arg_list RPAREN   { $$ = N(NODE_PRINT, @$, 1, $3); }
     | PRINTLN LPAREN arg_list RPAREN { $$ = N(NODE_PRINTLN, @$, 1, $3); }
 
     /* variable declarations & assignments */
+    | TYPEKEYWORD dims IDENT opt_initializer
+    {
+        /* child 0 = SEQ of NUMS
+         * child 1 = initializer */
+        Node* n = N(NODE_ARRAYDECL, @$, 2, $2, $4);
+        n->vartype = $1;
+        n->varname = $3;
+        $$ = n;
+    }
     | TYPEKEYWORD IDENT          { $$ = N(NODE_VARDECL, @$, 0); $$->varname = $2; $$->vartype = $1; }
     | TYPEKEYWORD IDENT '=' expr { $$ = N(NODE_VARDECL, @$, 1, $4); $$->varname = $2; $$->vartype = $1; }
     | IDENT '=' expr             { $$ = N(NODE_ASSIGN, @$, 1, $3); $$->varname = $1; }
@@ -214,6 +254,19 @@ stmt
     | expr LBRACKET expr RBRACKET '=' expr %prec ASSIGN
     {
          $$ = N(NODE_IDXASSIGN, @$, 3, $1, $3, $6);
+    }
+    ;
+
+array_items
+    : expr                       { $$ = N(NODE_ARRAYLIT, @$, 1, $1); }
+    | array_items COMMA expr
+    {
+        Node* a = $1;
+        int old = a->n_children;
+        a->n_children = old + 1;
+        a->children = realloc(a->children, sizeof(Node*) * a->n_children);
+        a->children[old] = $3;
+        $$ = a;
     }
     ;
 
@@ -249,6 +302,8 @@ expr
     | expr AND expr              { $$ = N(NODE_AND, @$, 2, $1, $3); }
     | expr OR expr               { $$ = N(NODE_OR, @$, 2, $1, $3); }
     | expr LBRACKET expr RBRACKET { $$ = N(NODE_IDX, @$, 2, $1, $3); }
+    | LBRACKET RBRACKET          { $$ = N(NODE_ARRAYLIT, @$, 0); }
+    | LBRACKET array_items RBRACKET { $$ = $2; }
     ;
 %%
 

@@ -35,6 +35,8 @@ typedef enum {
 
         NODE_IDX,
         NODE_IDXASSIGN,
+        NODE_ARRAYLIT,
+        NODE_ARRAYDECL,
 
         /* control flow */
         NODE_IF,

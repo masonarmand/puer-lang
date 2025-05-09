@@ -63,10 +63,20 @@ Var input(Node* node, Var* argv)
         return out;
 }
 
+Var clear(Node* node, Var* argv)
+{
+        Var out;
+        fputs("\x1b[2J\x1b[H", stdout);
+        fflush(stdout);
+        set_void(&out);
+        return out;
+}
+
 Var testlib(Node* node, Var* argv)
 {
         Var out;
         fputs("Puer Standard Library !!\n", stdout);
+        fflush(stdout);
         set_void(&out);
         return out;
 }
@@ -76,4 +86,5 @@ void init_puerlib(void)
         REGISTER_BUILTIN(input, { TYPE_STRING }, 1, TYPE_STRING);
         REGISTER_BUILTIN(testlib, {}, 0, TYPE_VOID);
         REGISTER_BUILTIN(getch, {}, 0, TYPE_INT);
+        REGISTER_BUILTIN(clear, {}, 0, TYPE_VOID);
 }

@@ -13,3 +13,10 @@ for (c = getch(); c != 'q'; c = getch()) {
         println(c);
 }
 
+clear(); // clears the screen
+
+// the following should produce errors
+//input(5);
+//clear("hello");
+//input("test", "test");
+//getch(5);
