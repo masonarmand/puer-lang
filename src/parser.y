@@ -152,6 +152,10 @@ param_list
 opt_return
     : /* empty */                { $$ = TYPE_VOID; }
     | ARROW TYPEKEYWORD          { $$ = $2; }
+    | ARROW TYPEKEYWORD dims
+    {
+        $$ = TYPE_ARRAY;
+    }
     ;
 
 /* function args when calling function */
@@ -209,39 +213,21 @@ dims
     | dims LBRACKET RBRACKET
     {
         Node* seq = $1;
-        Node* d = N(NODE_NUM, @$, 0);
-        d->ival = -1;
-        int old = seq->n_children;
-
-        seq->n_children = old + 1;
-        seq->children = realloc(
-            seq->children,
-            sizeof(Node*) * seq->n_children
-        );
-        seq->children[old] = d;
-
+        seq->n_children++;
+        seq->children = realloc(seq->children, sizeof(Node*) * seq->n_children);
+        seq->children[seq->n_children-1] = N(NODE_NOP, @$, 0);
         $$ = seq;
     }
-    | LBRACKET NUM RBRACKET
+    | LBRACKET expr RBRACKET
     {
-        Node* d = N(NODE_NUM, @$, 0);
-        d->ival = $2;
-        $$ = N(NODE_SEQ, @$, 1, d);
+        $$ = N(NODE_SEQ, @$, 1, $2);
     }
-    | dims LBRACKET NUM RBRACKET
+    | dims LBRACKET expr RBRACKET
     {
         Node* seq = $1;
-        Node* d = N(NODE_NUM, @$, 0);
-        d->ival = $3;
-
-        int old = seq->n_children;
-        seq->n_children = old + 1;
-        seq->children = realloc(
-            seq->children,
-            sizeof(Node*) * seq->n_children
-        );
-        seq->children[old] = d;
-
+        seq->n_children++;
+        seq->children = realloc(seq->children, sizeof(Node*) * seq->n_children);
+        seq->children[seq->n_children-1] = $3;
         $$ = seq;
     }
     ;

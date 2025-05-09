@@ -1,7 +1,27 @@
 #include "var.h"
-
+#include "arraylist.h"
 #include <stdlib.h>
 #include <string.h>
+
+
+Var var_clone(const Var* src)
+{
+        Var out;
+        out.type = src->type;
+
+        switch (src->type) {
+        case TYPE_ARRAY:
+                out.data.a = arraylist_clone(src->data.a);
+                break;
+        case TYPE_STRING:
+                out.data.s = string_clone(src->data.s);
+                break;
+        default:
+                out.data = src->data;
+                break;
+        }
+        return out;
+}
 
 VarType coerce(Var* a, Var* b)
 {

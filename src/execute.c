@@ -370,6 +370,8 @@ Var eval_funccall(Node* node)
                         die(node, "function '%s': return type mismatch (expected %d, got %d)",
                                 node->varname, func->vartype, g_retval.type);
                 }
+                if (func->vartype == TYPE_ARRAY || func->vartype == TYPE_STRING)
+                        g_retval = var_clone(&g_retval);
         }
         else {
                 if (func->vartype != TYPE_VOID)
@@ -430,24 +432,36 @@ void eval_arraydecl(Node* node)
         int ndims = dims_node->n_children;
         Var value;
 
-        if (ndims > 0 && init_node->type == NODE_NOP) {
-                int* dims = malloc(sizeof(int) * ndims);
-                int i;
-                for (i = 0; i < ndims; i++)
-                        dims[i] = dims_node->children[i]->ival;
-                value = build_zero_array(node->vartype, dims, ndims);
-                free(dims);
-        }
-        if (init_node->type != NODE_NOP) {
-                value = eval_expr(init_node);
-                if (value.type != TYPE_ARRAY) {
-                        die(node, "initializer for '%s' must be an array", node->varname);
+        if (ndims == 0) {
+                if (init_node->type != NODE_NOP) {
+                        value = eval_expr(init_node);
+                        if (value.type != TYPE_ARRAY)
+                                die(node, "initializer for '%s' must be an array", node->varname);
+                }
+                else {
+                        ArrayList* a = arraylist_new(node->vartype, 0);
+                        value.type = TYPE_ARRAY;
+                        value.data.a = a;
                 }
         }
         else {
-                value = build_zero_array(node->vartype, NULL, 0);
+                int* sizes = malloc(sizeof(int) * ndims);
+                int i;
+                for (i = 0; i < ndims; i++) {
+                        Node* dim_expr = dims_node->children[i];
+                        if (dim_expr->type == NODE_NOP) {
+                                sizes[i] = 0;
+                        }
+                        else {
+                                Var v = eval_expr(dim_expr);
+                                if (v.type != TYPE_INT)
+                                        die(node, "array dimension %d is not an integer", i);
+                                sizes[i] = v.data.i;
+                        }
+                }
+                value = build_zero_array(node->vartype, sizes, ndims);
+                free(sizes);
         }
-
         env_set(node->varname, value);
 }
 

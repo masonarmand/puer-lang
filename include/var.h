@@ -45,6 +45,7 @@ typedef struct ArrayList {
         int capacity;
 } ArrayList;
 
+Var var_clone(const Var* src);
 VarType coerce(Var* a, Var* b);
 VarType common_type(VarType a, VarType b);
 void cast_to(Var* v, VarType target);

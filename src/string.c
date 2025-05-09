@@ -37,6 +37,11 @@ String* string_concat(String* a, String* b)
         return result;
 }
 
+String* string_clone(const String* s)
+{
+        return string_new(s->data);
+}
+
 char string_get(String* s, int index)
 {
         check_str_bounds(s, index);
@@ -54,7 +59,7 @@ int string_len(String* s)
         return (int)s->length;
 }
 
-void stfing_free(String* s)
+void string_free(String* s)
 {
         if (!s)
                 return;

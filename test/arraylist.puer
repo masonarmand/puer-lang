@@ -14,4 +14,11 @@ append(arr, 6);
 println(arr);
 println("length of arr is", len(arr));
 
-println(mat);
+println("2d array: ", mat);
+
+str s = "hello";
+println(s);
+s = s + " world";
+println("string concat: " + s);
+s[5] = '_';
+println("indexing:", s);

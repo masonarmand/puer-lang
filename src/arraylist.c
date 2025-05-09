@@ -13,6 +13,17 @@ ArrayList* arraylist_new(VarType type, int initial_capacity)
         return a;
 }
 
+ArrayList* arraylist_clone(const ArrayList* src)
+{
+        ArrayList* dst = arraylist_new(src->type, src->size);
+        int i;
+        for (i = 0; i < src->size; i++) {
+                Var child_copy = var_clone(&src->items[i]);
+                arraylist_push(dst, child_copy);
+        }
+        return dst;
+}
+
 void arraylist_grow(ArrayList* a)
 {
         a->capacity *= 2;
