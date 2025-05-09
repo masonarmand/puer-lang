@@ -5,7 +5,6 @@
     - [X] `if`, `if else`
     - [X] `for`, `while`
 - [X] `&&` and `||`
-- [X] Create internal generic for type system `Var`
 - [ ] Data Types
     - [X] `int`
     - [X] `float`
@@ -13,9 +12,9 @@
     - [ ] `char`
     - [X] `type[]` - dynamic arrays (supporting multiple dimensions)
     - [X] `str`
-    - [ ] `dict` - Hashmaps similar to python dicts
     - [ ] `long`
     - [ ] `uint`
+- [ ] Garbage Collection
 - [ ] Make assignment (`=`) work as an expression
 - [ ] shorthand expressions
     - [ ] `++`, `--`
@@ -23,7 +22,6 @@
 - [ ] some way to convert between data types e.g, `str` -> `int`
 - [X] functions with return types and args
 - [ ] structs/records
-- [ ] Garbage Collection
 
 ## stdlib, IO
 
@@ -38,9 +36,10 @@
 
 ## Other
 
-- [ ] C bindings
-    - [ ] Binding to raylib library
+- [ ] `dict` - Hashmaps similar to python dicts
 - [ ] extended control flow (optional)
     - [ ] `do () {} while ()`
     - [ ] `switch` or `match`
+- [ ] C bindings
+    - [ ] Binding to raylib library
 - [ ] Function argument caching
