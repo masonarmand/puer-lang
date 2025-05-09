@@ -22,7 +22,6 @@
     - [ ] `+=`, `-=`, `/=`, `*=`, `%=`
 - [ ] some way to convert between data types e.g, `str` -> `int`
 - [X] functions with return types and args
-    - [ ] (optional) argument caching
 - [ ] structs/records
 - [ ] Garbage Collection
 
@@ -44,3 +43,4 @@
 - [ ] extended control flow (optional)
     - [ ] `do () {} while ()`
     - [ ] `switch` or `match`
+- [ ] Function argument caching
