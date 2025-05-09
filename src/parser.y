@@ -54,6 +54,11 @@ static Node* set_loc(Node* n, YYLTYPE loc)
         enum VarType vartype;
 }
 
+%nonassoc RETVOID
+%right ARROW
+%left LBRACKET RBRACKET
+%nonassoc ASSIGN
+
 %left OR
 %left AND
 %nonassoc EQ NE
@@ -63,9 +68,6 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %right NOT UMINUS
 %nonassoc IFX
 %nonassoc ELSE
-
-%nonassoc ASSIGN
-%left LBRACKET RBRACKET
 
 
 %token <ival> NUM
@@ -151,8 +153,8 @@ param_list
 
 opt_return
     : /* empty */                { $$ = TYPE_VOID; }
-    | ARROW TYPEKEYWORD          { $$ = $2; }
-    | ARROW TYPEKEYWORD dims
+    | ARROW TYPEKEYWORD %prec RETVOID { $$ = $2; }
+    | ARROW TYPEKEYWORD dims %prec RETVOID
     {
         $$ = TYPE_ARRAY;
     }
