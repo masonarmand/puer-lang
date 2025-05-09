@@ -58,11 +58,6 @@ typedef enum {
         NODE_RETURN
 } NodeType;
 
-typedef struct {
-        char* name;
-        VarType type;
-} FunctionParam;
-
 typedef struct Node {
         NodeType type;
         struct Node** children;
@@ -78,8 +73,6 @@ typedef struct Node {
 
         char* varname; /* function names, variable names, identifiers */
         VarType vartype; /* VARDECL, PARAM, FUNCDECL type */
-        FunctionParam* params;
-        int n_params;
 } Node;
 
 /* ast.c */
