@@ -171,7 +171,12 @@ void print_var(Node* node, const Var* v)
                 int i;
                 printf("[");
                 for (i = 0; i < a->size; i++) {
+                        int is_str = (a->items[i].type == TYPE_STRING);
+                        if (is_str)
+                                printf("\"");
                         print_var(node, &a->items[i]);
+                        if (is_str)
+                                printf("\"");
                         if (i + 1 < a->size)
                                 printf(", ");
                 }
