@@ -359,6 +359,7 @@ Var eval_funccall(Node* node)
 
 void eval_idxassign(Node* node)
 {
+        /* todo: switch -> type_string or type_array */
         Var str = eval_expr(node->children[0]);
         Var idx = eval_expr(node->children[1]);
         Var val = eval_expr(node->children[2]);
@@ -371,11 +372,61 @@ void eval_idxassign(Node* node)
         string_set(str.data.s, idx.data.i, c);
 }
 
+Var eval_binop(Node* node)
+{
+        Var a;
+        Var b;
+        VarType type;
+        BinOpFunc func;
+        BinOp op = get_binop(node->type);
+
+        if (op == -1)
+                die(node, "Unhandled expr node type: '%d'", node->type);
+
+        a = eval_expr(node->children[0]);
+        b = eval_expr(node->children[1]);
+        /*type = common_type(a.type, b.type);*/
+
+        /* overide '+' for string concat */
+        if (a.type == TYPE_STRING && b.type == TYPE_STRING && op == OP_ADD) {
+                Var result;
+                result.type = TYPE_STRING;
+                result.data.s = string_concat(a.data.s, b.data.s);
+                return result;
+        }
+
+        type = coerce(&a, &b);
+
+        func = type_ops[type].ops[op];
+
+        if (!func)
+                die(node, "Operator not supported for this type");
+
+        return func(a, b);
+}
+
+Var eval_idx(Node* node)
+{
+        /* todo: switch -> type_string or type_array */
+        Var str = eval_expr(node->children[0]);
+        Var idx = eval_expr(node->children[1]);
+        Var v;
+        char c;
+
+        if (str.type != TYPE_STRING || idx.type != TYPE_INT)
+                die(node, "Invalid types for indexing (expected str[int])");
+
+        c = string_get(str.data.s, idx.data.i);
+        set_int(&v, (int)c); /*TODO change to char when char type is added*/
+        return v;
+}
+
 Var eval_expr(Node* node)
 {
         Var v;
         Var* found;
 
+        /* maybe put this in expr dispatch handler */
         switch (node->type) {
         case NODE_NOP:
                 set_int(&v, 1);
@@ -429,48 +480,9 @@ Var eval_expr(Node* node)
                 set_int(&right, as_int(right));
                 return right;
         }
-        case NODE_IDX: {
-                Var str = eval_expr(node->children[0]);
-                Var idx = eval_expr(node->children[1]);
-                char c;
-
-                if (str.type != TYPE_STRING || idx.type != TYPE_INT)
-                        die(node, "Invalid types for indexing (expected str[int])");
-
-                c = string_get(str.data.s, idx.data.i);
-                set_int(&v, (int)c); /*TODO change to char when char type is added*/
-                return v;
-        }
-        default: {
-                Var a;
-                Var b;
-                VarType type;
-                BinOpFunc func;
-                BinOp op = get_binop(node->type);
-
-                if (op == -1)
-                        die(node, "Unhandled expr node type: '%d'", node->type);
-
-                a = eval_expr(node->children[0]);
-                b = eval_expr(node->children[1]);
-                /*type = common_type(a.type, b.type);*/
-
-                /* overide '+' for string concat */
-                if (a.type == TYPE_STRING && b.type == TYPE_STRING && op == OP_ADD) {
-                        Var result;
-                        result.type = TYPE_STRING;
-                        result.data.s = string_concat(a.data.s, b.data.s);
-                        return result;
-                }
-
-                type = coerce(&a, &b);
-
-                func = type_ops[type].ops[op];
-
-                if (!func)
-                        die(node, "Operator not supported for this type");
-
-                return func(a, b);
-        }
+        case NODE_IDX:
+                return eval_idx(node);
+        default:
+                return eval_binop(node);
         }
 }
