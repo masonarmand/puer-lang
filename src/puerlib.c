@@ -81,28 +81,53 @@ Var testlib(Node* node, Var* argv)
         return out;
 }
 
-Var arrlen(Node* node, Var* argv)
+Var len(Node* node, Var* argv)
 {
-        Var arg = argv[0];
+        Var container = argv[0];
         Var out;
-        set_int(&out, arg.data.a->size);
+        switch(container.type) {
+        case TYPE_ARRAY:
+                set_int(&out, container.data.a->size);
+                break;
+        case TYPE_STRING:
+                set_int(&out, container.data.s->length);
+                break;
+        default:
+                die(node, "Expected type array or string for len()");
+        }
         return out;
 }
 
-Var puer_strlen(Node* node, Var* argv)
+Var append(Node* node, Var* argv)
 {
-        Var arg = argv[0];
+        Var a = argv[0];
+        Var v = argv[1];
         Var out;
-        set_int(&out, arg.data.s->length);
+        ArrayList* arr;
+
+        if (a.type != TYPE_ARRAY)
+                die(node, "append: first argument must be an array");
+
+        arr = a.data.a;
+        if (v.type != arr->type) {
+                die(
+                        node,
+                        "append: element type mismatch (array holds %d, got %d)",
+                        arr->type, v.type
+                );
+        }
+
+        arraylist_push(arr, v);
+        set_void(&out);
         return out;
 }
 
 void init_puerlib(void)
 {
-        REGISTER_BUILTIN(input, { TYPE_STRING }, 1, TYPE_STRING);
-        REGISTER_BUILTIN(testlib, {}, 0, TYPE_VOID);
-        REGISTER_BUILTIN(getch, {}, 0, TYPE_INT);
-        REGISTER_BUILTIN(clear, {}, 0, TYPE_VOID);
-        REGISTER_BUILTIN(arrlen, { TYPE_ARRAY  }, 1, TYPE_INT);
-        REGISTER_BUILTIN_WNAME("strlen", puer_strlen, { TYPE_STRING }, 1, TYPE_INT);
+        REGISTER_BUILTIN(input, TYPE_STRING, TYPE_STRING);
+        REGISTER_BUILTIN(testlib, TYPE_VOID);
+        REGISTER_BUILTIN(getch, TYPE_INT);
+        REGISTER_BUILTIN(clear, TYPE_VOID);
+        REGISTER_BUILTIN(len, TYPE_INT, TYPE_ANY);
+        REGISTER_BUILTIN(append, TYPE_VOID, TYPE_ANY, TYPE_ANY);
 }

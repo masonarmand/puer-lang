@@ -81,7 +81,7 @@ int call_builtin_if_exists(Node* node, Var* out)
         argv = malloc(sizeof(Var) * b->n_params);
         for (i = 0; i < b->n_params; i++) {
                 argv[i] = eval_expr(argv_nodes->children[i]);
-                if (argv[i].type != b->param_types[i]) {
+                if (argv[i].type != b->param_types[i] && b->param_types[i] != TYPE_ANY) {
                         die(
                                 node,
                                 "function '%s' arg %d: expected type %d, got %d",

@@ -1,37 +1,17 @@
-str[][] mat = [
-        [".", ".", ".", "."],
-        [".", ".", ".", "."],
-        [".", ".", ".", "."],
-        [".", ".", ".", "."],
-        [".", ".", ".", "."],
-        [".", ".", ".", "."],
-        [".", ".", ".", "."]
+int[] arr = [1, 2, 3, 4, 5];
+int[][] mat = [
+        [1, 2, 3, 4, 5],
+        [1, 2, 3, 4, 5],
+        [1, 2, 3, 4, 5],
+        [1, 2, 3, 4, 5],
+        [1, 2, 3, 4, 5]
 ];
 
-int px = 0;
-int py = 0;
+println(arr);
+println("length of arr is", len(arr));
+println("append");
+append(arr, 6);
+println(arr);
+println("length of arr is", len(arr));
 
-while (1) {
-        int key = getch();
-        if (key == 'q')
-                break;
-        else if (key == 'h') // left
-                px = px - 1;
-        else if (key == 'l') // right
-                px = px + 1;
-        else if (key == 'k') // up
-                py = py - 1;
-        else if (key == 'j') // down
-                py = py + 1;
-
-        clear();
-        for (int y = 0; y < arrlen(mat); y = y + 1) {
-                for (int x = 0; x < arrlen(mat[y]); x = x + 1) {
-                        if (y == py && x == px)
-                                print("@");
-                        else
-                                print(mat[y][x]);
-                }
-                println();
-        }
-}
+println(mat);

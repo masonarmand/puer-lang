@@ -14,13 +14,15 @@ void builtin_register(const char* name, BuiltinFn fn, VarType* param_types, int 
 
 int call_builtin_if_exists(Node* node, Var* out);
 
-#define REGISTER_BUILTIN(fn, types, count, ret) \
-        static VarType fn##_param_types[count] = types; \
-        builtin_register(#fn, fn, fn##_param_types, count, ret)
+#define REGISTER_BUILTIN(fn, ret, ...) \
+        static VarType fn##_param_types[] = { __VA_ARGS__ }; \
+        builtin_register( \
+                #fn, fn, \
+                fn##_param_types, \
+                sizeof(fn##_param_types) / sizeof(fn##_param_types[0]), \
+                ret \
+        )
 
-#define REGISTER_BUILTIN_WNAME(name, fn, types, count, ret) \
-        static VarType fn##_param_types[count] = types; \
-        builtin_register(name, fn, fn##_param_types, count, ret)
 
 
 #endif

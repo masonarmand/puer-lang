@@ -48,6 +48,9 @@ void eval_arraydecl(Node* node);
 
 Var eval_funccall(Node* node);
 
+/* helpers */
+void print_var(Node* node, const Var* v);
+
 static StmtDispatch handlers[] = {
         { NODE_NOP, eval_nop },
         { NODE_SEQ, eval_seq },
@@ -141,34 +144,51 @@ void eval_seq(Node* node)
         eval(node->children[1]);
 }
 
+void print_var(Node* node, const Var* v)
+{
+        switch (v->type) {
+        case TYPE_INT:
+                printf("%d", v->data.i);
+                break;
+        case TYPE_UINT:
+                printf("%u", v->data.ui);
+                break;
+        case TYPE_LONG:
+                printf("%ld", v->data.l);
+                break;
+        case TYPE_FLOAT:
+                printf("%f", v->data.f);
+                break;
+        case TYPE_BOOL:
+                /* TODO (data == 1) ? "true" : "false" */
+                printf(v->data.b ? "true" : "false");
+                break;
+        case TYPE_STRING:
+                printf("%s", v->data.s->data);
+                break;
+        case TYPE_ARRAY:
+                ArrayList* a = v->data.a;
+                int i;
+                printf("[");
+                for (i = 0; i < a->size; i++) {
+                        print_var(node, &a->items[i]);
+                        if (i + 1 < a->size)
+                                printf(", ");
+                }
+                printf("]");
+                break;
+        default:
+                die(node, "unsupported type in print");
+        }
+}
+
 void eval_print(Node* node)
 {
         Node* args = node->children[0];
         unsigned int i;
         for (i = 0; i < args->n_children; i++) {
                 Var v = eval_expr(args->children[i]);
-                switch (v.type) {
-                case TYPE_INT:
-                        printf("%d", v.data.i);
-                        break;
-                case TYPE_UINT:
-                        printf("%u", v.data.ui);
-                        break;
-                case TYPE_LONG:
-                        printf("%ld", v.data.l);
-                        break;
-                case TYPE_FLOAT:
-                        printf("%f", v.data.f);
-                        break;
-                case TYPE_BOOL:
-                        /* TODO (data == 1) ? "true" : "false" */
-                        break;
-                case TYPE_STRING:
-                        printf("%s", v.data.s->data);
-                        break;
-                default:
-                        die(node, "unsupported type in print");
-                }
+                print_var(node, &v);
 
                 /* spaces between args */
                 if (i < args->n_children - 1)
