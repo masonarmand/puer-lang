@@ -132,6 +132,12 @@ void set_string(Var* v, const char* val)
         v->data.s = string_new(val);
 }
 
+void set_array(Var* v, ArrayList* arr)
+{
+        v->type = TYPE_ARRAY;
+        v->data.a = arr;
+}
+
 int as_int(Var v)
 {
         if (v.type != TYPE_INT) {

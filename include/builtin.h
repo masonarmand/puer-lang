@@ -18,5 +18,9 @@ int call_builtin_if_exists(Node* node, Var* out);
         static VarType fn##_param_types[count] = types; \
         builtin_register(#fn, fn, fn##_param_types, count, ret)
 
+#define REGISTER_BUILTIN_WNAME(name, fn, types, count, ret) \
+        static VarType fn##_param_types[count] = types; \
+        builtin_register(name, fn, fn##_param_types, count, ret)
+
 
 #endif

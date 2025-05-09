@@ -4,6 +4,7 @@
 #include "ops.h"
 #include "func.h"
 #include "builtin.h"
+#include "arraylist.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +44,8 @@ void eval_nop(Node* node);
 void eval_funcdef(Node* node);
 void eval_funccall_stmt(Node* node);
 void eval_idxassign(Node* node);
+void eval_arraydecl(Node* node);
+
 Var eval_funccall(Node* node);
 
 static StmtDispatch handlers[] = {
@@ -59,6 +62,7 @@ static StmtDispatch handlers[] = {
         { NODE_FUNCDEF, eval_funcdef },
         { NODE_FUNCCALL, eval_funccall_stmt },
         { NODE_IDXASSIGN, eval_idxassign },
+        { NODE_ARRAYDECL, eval_arraydecl },
         { -1, NULL },
 };
 
@@ -359,17 +363,102 @@ Var eval_funccall(Node* node)
 
 void eval_idxassign(Node* node)
 {
-        /* todo: switch -> type_string or type_array */
-        Var str = eval_expr(node->children[0]);
+        Var container = eval_expr(node->children[0]);
         Var idx = eval_expr(node->children[1]);
         Var val = eval_expr(node->children[2]);
-        char c;
+        int i;
 
-        if (str.type != TYPE_STRING || idx.type != TYPE_INT || val.type != TYPE_INT)
-                die(node, "Invalid types for string index assignment");
+        if (idx.type != TYPE_INT)
+                die(node, "index must be an integer");
 
-        c = (char)val.data.i;
-        string_set(str.data.s, idx.data.i, c);
+        i = idx.data.i;
+
+        if (container.type == TYPE_STRING) {
+                if (val.type != TYPE_INT)
+                        die(node, "Can only assign char to a string character");
+                string_set(container.data.s, i, (char)val.data.i);
+        }
+        else if (container.type == TYPE_ARRAY) {
+                ArrayList* a = container.data.a;
+
+                if (i < 0 || i >= a->size) {
+                        die(
+                                node,
+                                "array index %d out of bounds (size %d)",
+                                i, a->size
+                        );
+                }
+
+                if (val.type != a->type) {
+                        die(
+                                node,
+                                "Type mismatch: array holds %d but got %d",
+                                a->type, val.type
+                        );
+                }
+                a->items[i] = val;
+        }
+        else {
+                die(node, "Cannot index‐assign into type %d", container.type);
+        }
+}
+
+void eval_arraydecl(Node* node)
+{
+        Node* dims_node = node->children[0];
+        Node* init_node = node->children[1];
+        int ndims = dims_node->n_children;
+        Var value;
+
+        if (ndims > 0 && init_node->type == NODE_NOP) {
+                int* dims = malloc(sizeof(int) * ndims);
+                int i;
+                for (i = 0; i < ndims; i++)
+                        dims[i] = dims_node->children[i]->ival;
+                value = build_zero_array(node->vartype, dims, ndims);
+                free(dims);
+        }
+        if (init_node->type != NODE_NOP) {
+                value = eval_expr(init_node);
+                if (value.type != TYPE_ARRAY) {
+                        die(node, "initializer for '%s' must be an array", node->varname);
+                }
+        }
+        else {
+                value = build_zero_array(node->vartype, NULL, 0);
+        }
+
+        env_set(node->varname, value);
+}
+
+Var eval_arraylit(Node* node)
+{
+        int n = node->n_children;
+        VarType type = TYPE_INT;
+        ArrayList* arr;
+        int i;
+        Var out;
+
+        if (n > 0) {
+                Var first = eval_expr(node->children[0]);
+                type = first.type;
+        }
+
+        arr = arraylist_new(type, n);
+        for (i = 0; i < n; i++) {
+                Var v = eval_expr(node->children[i]);
+                if (v.type != type) {
+                        die(
+                                node,
+                                "array literal: element %d has type %d, expected %d",
+                                i, v.type, type
+                        );
+                }
+                arraylist_push(arr, v);
+        }
+
+        set_array(&out, arr);
+        return out;
 }
 
 Var eval_binop(Node* node)
@@ -407,18 +496,33 @@ Var eval_binop(Node* node)
 
 Var eval_idx(Node* node)
 {
-        /* todo: switch -> type_string or type_array */
-        Var str = eval_expr(node->children[0]);
+        Var container = eval_expr(node->children[0]);
         Var idx = eval_expr(node->children[1]);
         Var v;
-        char c;
+        int i;
 
-        if (str.type != TYPE_STRING || idx.type != TYPE_INT)
-                die(node, "Invalid types for indexing (expected str[int])");
+        if (idx.type != TYPE_INT)
+                die(node, "index must be an integer");
 
-        c = string_get(str.data.s, idx.data.i);
-        set_int(&v, (int)c); /*TODO change to char when char type is added*/
-        return v;
+        i = idx.data.i;
+
+        if (container.type == TYPE_STRING) {
+                char c;
+                if (i < 0 || i >= (int)container.data.s->length)
+                        die(node, "string index %d out of bounds", i);
+                c = string_get(container.data.s, i);
+                set_int(&v, (int)c);
+                return v;
+        }
+        else if (container.type == TYPE_ARRAY) {
+                ArrayList* a = container.data.a;
+                if (i < 0 || i >= a->size)
+                        die(node, "array index %d out of bounds (size %d)", i, a->size);
+                return a->items[i];
+        }
+        else {
+                die(node, "cannot index type %d", container.type);
+        }
 }
 
 Var eval_expr(Node* node)
@@ -445,6 +549,8 @@ Var eval_expr(Node* node)
         case NODE_STRING:
                 set_string(&v, node->varname);
                 return v;
+        case NODE_ARRAYLIT:
+                return eval_arraylit(node);
         case NODE_CHAR:
                 set_int(&v, node->ival);
                 return v;

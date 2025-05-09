@@ -1,14 +1,89 @@
 #include "var.h"
 #include "arraylist.h"
+#include "puerstring.h"
+#include <stdlib.h>
 
 ArrayList* arraylist_new(VarType type, int initial_capacity)
 {
-
+        ArrayList* a = malloc(sizeof(ArrayList));
+        a->type = type;
+        a->size = 0;
+        a->capacity = initial_capacity > 0 ? initial_capacity : 1;
+        a->items = malloc(sizeof(Var) * a->capacity);
+        return a;
 }
 
 void arraylist_grow(ArrayList* a)
 {
-
+        a->capacity *= 2;
+        a->items = realloc(a->items, sizeof(Var) * a->capacity);
 }
 
+void arraylist_push(ArrayList* a, Var v)
+{
+        if (a->size >= a->capacity) {
+                arraylist_grow(a);
+        }
+        a->items[a->size++] = v;
+}
 
+Var build_zero_array_1d(VarType base, int size)
+{
+        ArrayList* a = arraylist_new(base, size);
+        Var out;
+        int i;
+
+        for (i = 0; i < size; i++) {
+                Var elt;
+                elt.type = base;
+                switch (base) {
+                case TYPE_INT:
+                        elt.data.i = 0;
+                        break;
+                case TYPE_UINT:
+                        elt.data.ui = 0;
+                        break;
+                case TYPE_LONG:
+                        elt.data.l = 0;
+                        break;
+                case TYPE_FLOAT:
+                        elt.data.f = 0.0f;
+                        break;
+                case TYPE_STRING:
+                        elt.data.s = string_new("");
+                        break;
+                default:
+                        die(NULL, "unsupported array base type %d", base);
+                }
+                arraylist_push(a, elt);
+        }
+
+        set_array(&out, a);
+        return out;
+}
+
+static Var build_zero_array_nd(VarType base, int* dims, int ndims)
+{
+        ArrayList* a;
+        Var out;
+        int i;
+
+        if (ndims == 1)
+                return build_zero_array_1d(base, dims[0]);
+
+        a = arraylist_new(TYPE_ARRAY, dims[0]);
+        for (i = 0; i < dims[0]; i++) {
+                Var child = build_zero_array_nd(base, dims + 1, ndims - 1);
+                arraylist_push(a, child);
+        }
+
+        set_array(&out, a);
+        return out;
+}
+
+Var build_zero_array(VarType base, int* dims, int ndims)
+{
+        if (ndims <= 0)
+                return build_zero_array_1d(base, 0);
+        return build_zero_array_nd(base, dims, ndims);
+}

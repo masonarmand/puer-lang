@@ -205,17 +205,34 @@ opt_initializer
     ;
 
 dims
-    : LBRACKET NUM RBRACKET
+    : LBRACKET RBRACKET          { $$ = N(NODE_SEQ, @$, 0); }
+    | dims LBRACKET RBRACKET
+    {
+        Node* seq = $1;
+        Node* d = N(NODE_NUM, @$, 0);
+        d->ival = -1;
+        int old = seq->n_children;
+
+        seq->n_children = old + 1;
+        seq->children = realloc(
+            seq->children,
+            sizeof(Node*) * seq->n_children
+        );
+        seq->children[old] = d;
+
+        $$ = seq;
+    }
+    | LBRACKET NUM RBRACKET
     {
         Node* d = N(NODE_NUM, @$, 0);
         d->ival = $2;
         $$ = N(NODE_SEQ, @$, 1, d);
     }
-    | dims '[' NUM ']'
+    | dims LBRACKET NUM RBRACKET
     {
-        Node *seq = $1;
-        Node *d   = N(NODE_NUM, @$, 0);
-        d->ival   = $3;
+        Node* seq = $1;
+        Node* d = N(NODE_NUM, @$, 0);
+        d->ival = $3;
 
         int old = seq->n_children;
         seq->n_children = old + 1;

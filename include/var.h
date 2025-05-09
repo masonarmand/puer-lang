@@ -54,6 +54,7 @@ void set_uint(Var* v, unsigned int val);
 void set_float(Var* v, float val);
 void set_long(Var* v, long val);
 void set_string(Var* v, const char* val);
+void set_array(Var* v, ArrayList* arr);
 int as_int(Var v);
 unsigned int as_uint(Var v);
 float as_float(Var v);

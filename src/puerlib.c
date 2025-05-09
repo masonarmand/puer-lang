@@ -81,10 +81,28 @@ Var testlib(Node* node, Var* argv)
         return out;
 }
 
+Var arrlen(Node* node, Var* argv)
+{
+        Var arg = argv[0];
+        Var out;
+        set_int(&out, arg.data.a->size);
+        return out;
+}
+
+Var puer_strlen(Node* node, Var* argv)
+{
+        Var arg = argv[0];
+        Var out;
+        set_int(&out, arg.data.s->length);
+        return out;
+}
+
 void init_puerlib(void)
 {
         REGISTER_BUILTIN(input, { TYPE_STRING }, 1, TYPE_STRING);
         REGISTER_BUILTIN(testlib, {}, 0, TYPE_VOID);
         REGISTER_BUILTIN(getch, {}, 0, TYPE_INT);
         REGISTER_BUILTIN(clear, {}, 0, TYPE_VOID);
+        REGISTER_BUILTIN(arrlen, { TYPE_ARRAY  }, 1, TYPE_INT);
+        REGISTER_BUILTIN_WNAME("strlen", puer_strlen, { TYPE_STRING }, 1, TYPE_INT);
 }
