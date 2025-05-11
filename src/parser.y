@@ -92,8 +92,8 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token PRINTLN
 
 /* non terminals */
-%type <node> puer code block stmt expr
-%type <node> control_stmt opt_stmt opt_expr
+%type <node> puer top_code code block stmt expr
+%type <node> control_stmt opt_stmt opt_expr stmt_end top_stmt_end
 %type <node> array_items dims opt_initializer
 %type <node> function_def param_list arg_list
 %type <vartype> opt_return
@@ -101,20 +101,33 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 
 %%
 puer
-    : code                       { root = $1; }
+    : top_code                   { root = $1; }
+    ;
+
+top_code
+    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
+    | top_code top_stmt_end      { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
+    ;
+
+top_stmt_end
+    : function_def               { $$ = $1; }
+    | stmt_end                   { $$ = $1; }
     ;
 
 block
-    : stmt SEMICOLON             { $$ = $1; }
-    | control_stmt               { $$ = $1; }
-    | LBRACE code RBRACE         { $$ = $2; }
+    : LBRACE code RBRACE         { $$ = $2; }
+    ;
 
 code
     : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
-    | code stmt SEMICOLON        { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
-    | code control_stmt          { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
-    | code function_def          { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
+    | code stmt_end              { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
     ;
+
+stmt_end
+   : stmt SEMICOLON              { $$ = $1; }
+   | control_stmt                { $$ = $1; }
+   | block                       { $$ = $1; }
+   ;
 
 function_def
     : DEF IDENT LPAREN param_list RPAREN opt_return block
@@ -176,19 +189,19 @@ arg_list
     ;
 
 control_stmt
-    : IF LPAREN expr RPAREN block %prec IFX
+    : IF LPAREN expr RPAREN stmt_end %prec IFX
                                  {
                                    $$ = N(NODE_IF, @$, 2, $3, $5);
                                  }
-    | IF LPAREN expr RPAREN block ELSE block
+    | IF LPAREN expr RPAREN stmt_end ELSE stmt_end
                                  {
                                    $$ = N(NODE_IFELSE, @$, 3, $3, $5, $7);
                                  }
-    | FOR LPAREN opt_stmt SEMICOLON opt_expr SEMICOLON opt_stmt RPAREN block
+    | FOR LPAREN opt_stmt SEMICOLON opt_expr SEMICOLON opt_stmt RPAREN stmt_end
                                  {
                                    $$ = N(NODE_FOR, @$, 4, $3, $5, $7, $9);
                                  }
-    | WHILE LPAREN expr RPAREN block
+    | WHILE LPAREN expr RPAREN stmt_end
                                  {
                                    $$ = N(NODE_WHILE, @$, 2, $3, $5);
                                  }
