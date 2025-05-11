@@ -52,8 +52,8 @@ int yycolumn = 1;
 }
 
 '[^\\']' {
-    yylval.ival = yytext[1];
-    return CHAR;
+        yylval.ival = yytext[1];
+        return CHAR;
 }
 
 '\\n'    { yylval.ival = '\n'; return CHAR; }
@@ -104,10 +104,14 @@ int yycolumn = 1;
 "]"                      return RBRACKET;
 
 "int"                    { yylval.vartype = TYPE_INT; return TYPEKEYWORD; }
+"bool"                   { yylval.vartype = TYPE_BOOL; return TYPEKEYWORD; }
 "uint"                   { yylval.vartype = TYPE_UINT; return TYPEKEYWORD; }
 "long"                   { yylval.vartype = TYPE_LONG; return TYPEKEYWORD; }
 "float"                  { yylval.vartype = TYPE_FLOAT; return TYPEKEYWORD; }
 "str"                    { yylval.vartype = TYPE_STRING; return TYPEKEYWORD; }
+
+"true"                   { yylval.bval = 1; return TRUE; }
+"false"                  { yylval.bval = 0; return FALSE; }
 
 [a-zA-Z_][a-zA-Z0-9_]*   { yylval.ident = strdup(yytext); return IDENT; }
 

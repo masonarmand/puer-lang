@@ -48,6 +48,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 
 %union {
         int ival;
+        int bval;
         float fval;
         char* ident;
         struct Node* node;
@@ -71,6 +72,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 
 
 %token <ival> NUM
+%token <bval> TRUE FALSE
 %token <fval> FLOAT
 %token <vartype> TYPEKEYWORD
 %token <ident> IDENT
@@ -291,6 +293,8 @@ array_items
 
 expr
     : NUM                        { $$ = N(NODE_NUM, @1, 0); $$->ival = $1; }
+    | TRUE                       { $$ = N(NODE_BOOL, @1, 0); $$->ival = $1; }
+    | FALSE                      { $$ = N(NODE_BOOL, @1, 0); $$->ival = $1; }
     | FLOAT                      { $$ = N(NODE_FLOAT, @1, 0); $$->fval = $1; }
     | IDENT                      { $$ = N(NODE_VAR, @1, 0); $$->varname = $1; }
     | STRING                     { $$ = N(NODE_STRING, @1, 0); $$->varname = $1; }

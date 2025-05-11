@@ -1,0 +1,64 @@
+println (false || false);
+println (true || false);
+
+bool t = true;
+bool f = false;
+println("t:", t);
+println("f:", f);
+
+bool not_t = !t;
+bool not_f = !f;
+println("!t:", not_t);
+println("!f:", not_f);
+
+bool a = true && true;
+bool b = true && false;
+bool c = false || false;
+bool d = true || false;
+println("true && true:", a);
+println("true && false:", b);
+println("false || false:", c);
+println("true || false:", d);
+
+bool lt = 1 < 2;
+bool gt = 2 > 3;
+bool eq = 5 == 5;
+bool ne = 5 != 6;
+println("1 < 2:", lt);
+println("2 > 3:", gt);
+println("5 == 5:", eq);
+println("5 != 6:", ne);
+
+if (lt) {
+        println("lt branch");
+}
+else {
+        println("lt else");
+}
+if (gt) {
+        println("gt branch");
+}
+else {
+        println("gt else");
+}
+
+bool keep = true;
+int count = 0;
+while (keep) {
+        count = count + 1;
+        if (count == 3)
+                keep = false;
+}
+println("while loop count (should be 3):", count);
+
+for (int i = 0; i < 3; i = i + 1) {
+        println("for i:", i);
+}
+
+int a = 5;
+
+if (a)
+        println("!!5 becomes truthy value");
+else
+        println("this should not print");
+

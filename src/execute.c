@@ -109,14 +109,14 @@ CtrlSignal eval_with_ctrl(Node* node)
 
 CtrlSignal eval_if_ctrl(Node* node)
 {
-        if (as_int(eval_expr(node->children[0])))
+        if (as_bool(eval_expr(node->children[0])))
                 return eval_block(node->children[1]);
         return CTRL_NONE;
 }
 
 CtrlSignal eval_ifelse_ctrl(Node* node)
 {
-        if (as_int(eval_expr(node->children[0])))
+        if (as_bool(eval_expr(node->children[0])))
                 return eval_block(node->children[1]);
         else
                 return eval_block(node->children[2]);
@@ -215,6 +215,7 @@ void eval_vardecl(Node* node)
         /* if var is initialized with a value */
         if (node->n_children > 0) {
                 Var result = eval_expr(node->children[0]);
+                result = implicit_convert(result, node->vartype);
 
                 if (result.type != node->vartype) {
                         die(node, "init expr type mismatch for '%s'", node->varname);
@@ -237,6 +238,7 @@ void eval_assign(Node* node)
         }
 
         result = eval_expr(node->children[0]);
+        result = implicit_convert(result, v->type);
         if (result.type != v->type)
                 die(node, "Type error: cannot assign to variable '%s'", node->varname);
         v->data = result.data;
@@ -244,13 +246,13 @@ void eval_assign(Node* node)
 
 void eval_if(Node* node)
 {
-        if (as_int(eval_expr(node->children[0])))
+        if (as_bool(eval_expr(node->children[0])))
                 eval_block(node->children[1]);
 }
 
 void eval_ifelse(Node* node)
 {
-        if (as_int(eval_expr(node->children[0])))
+        if (as_bool(eval_expr(node->children[0])))
                 eval_block(node->children[1]);
         else
                 eval_block(node->children[2]);
@@ -262,7 +264,7 @@ void eval_for(Node* node)
         env_push();
         eval(node->children[0]);
 
-        while (as_int(eval_expr(node->children[1]))) {
+        while (as_bool(eval_expr(node->children[1]))) {
                 /* for body */
                 CtrlSignal sig = eval_block(node->children[3]);
                 if (sig == CTRL_BREAK)
@@ -281,7 +283,7 @@ void eval_for(Node* node)
 
 void eval_while(Node* node)
 {
-        while(as_int(eval_expr(node->children[0]))) {
+        while(as_bool(eval_expr(node->children[0]))) {
                 CtrlSignal sig = eval_block(node->children[1]);
                 if (sig == CTRL_BREAK)
                         break;
@@ -589,6 +591,9 @@ Var eval_expr(Node* node)
         case NODE_CHAR:
                 set_int(&v, node->ival);
                 return v;
+        case NODE_BOOL:
+                set_bool(&v, node->ival);
+                return v;
         case NODE_FUNCCALL:
                 return eval_funccall(node);
         case NODE_NOT: {
@@ -596,7 +601,7 @@ Var eval_expr(Node* node)
                 if (inner.type != TYPE_BOOL && inner.type != TYPE_INT) {
                         die(node, "`!` operator requires boolean or integer type");
                 }
-                set_int(&v, !as_int(inner));
+                set_bool(&v, !as_int(inner));
                 return v;
         }
         case NODE_AND: {
@@ -607,7 +612,7 @@ Var eval_expr(Node* node)
                         return left;
                 }
                 right = eval_expr(node->children[1]);
-                set_int(&right, as_int(right));
+                set_bool(&right, as_int(right));
                 return right;
         }
         case NODE_OR: {
@@ -618,7 +623,7 @@ Var eval_expr(Node* node)
                         return left;
                 }
                 right = eval_expr(node->children[1]);
-                set_int(&right, as_int(right));
+                set_bool(&right, as_int(right));
                 return right;
         }
         case NODE_IDX:

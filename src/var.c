@@ -23,6 +23,23 @@ Var var_clone(const Var* src)
         return out;
 }
 
+Var implicit_convert(Var in, VarType target)
+{
+        if (in.type == target)
+                return in;
+
+        if (target == TYPE_BOOL && in.type == TYPE_INT) {
+                set_bool(&in, as_bool(in));
+                return in;
+        }
+
+        if (target == TYPE_INT && in.type == TYPE_BOOL) {
+                set_int(&in, as_int(in));
+        }
+
+        die(NULL, "cannot convert type %d to %d", in.type, target);
+}
+
 VarType coerce(Var* a, Var* b)
 {
         VarType type = common_type(a->type, b->type);
@@ -41,6 +58,8 @@ VarType common_type(VarType a, VarType b)
                 return TYPE_LONG;
         if (a == TYPE_UINT || b == TYPE_UINT)
                 return TYPE_UINT;
+        if (a == TYPE_BOOL || b == TYPE_BOOL)
+                return TYPE_BOOL;
         return TYPE_INT;
 }
 
@@ -79,6 +98,22 @@ void cast_to(Var* v, VarType target)
                 default: die(NULL, "cannot cast to int");
                 }
                 v->type = TYPE_INT;
+                break;
+        case TYPE_BOOL:
+                switch (v->type) {
+                case TYPE_FLOAT:
+                        v->data.b = (int)v->data.f;
+                        break;
+                case TYPE_UINT:
+                        v->data.b = (int)v->data.ui;
+                        break;
+                case TYPE_LONG:
+                        v->data.b = (int)v->data.l;
+                        break;
+                default: die(NULL, "cannot cast to bool");
+                }
+                v->data.b = !!(v->data.b);
+                v->type = TYPE_BOOL;
                 break;
         default:
                 die(NULL, "unsupported coercion to type %d", target);
@@ -134,6 +169,14 @@ void set_uint(Var* v, unsigned int val)
         v->data.ui = val;
 }
 
+
+void set_bool(Var* v, int val)
+{
+        val = !!val;
+        v->type = TYPE_BOOL;
+        v->data.b = val;
+}
+
 void set_float(Var* v, float val)
 {
         v->type = TYPE_FLOAT;
@@ -160,16 +203,32 @@ void set_array(Var* v, ArrayList* arr)
 
 int as_int(Var v)
 {
-        if (v.type != TYPE_INT) {
-                die("Expected int, got type %d\n", v.type);
+        if (v.type == TYPE_BOOL) {
+                return v.data.b;
         }
+        if (v.type != TYPE_INT) {
+                die(NULL, "Expected int, got type %d\n", v.type);
+        }
+
         return v.data.i;
+}
+
+int as_bool(Var v)
+{
+        if (v.type != TYPE_BOOL && v.type != TYPE_INT) {
+                die(NULL, "Expected bool, got type %d\n", v.type);
+        }
+        if (v.type == TYPE_BOOL)
+                return v.data.b;
+        if (v.type == TYPE_INT) {
+                return !!(v.data.i);
+        }
 }
 
 unsigned int as_uint(Var v)
 {
         if (v.type != TYPE_UINT) {
-                die("Expected unsigned int, got type %d\n", v.type);
+                die(NULL, "Expected unsigned int, got type %d\n", v.type);
         }
         return v.data.ui;
 }
@@ -177,7 +236,7 @@ unsigned int as_uint(Var v)
 float as_float(Var v)
 {
         if (v.type != TYPE_FLOAT) {
-                die("Expected float, got type %d\n", v.type);
+                die(NULL, "Expected float, got type %d\n", v.type);
         }
         return v.data.f;
 }

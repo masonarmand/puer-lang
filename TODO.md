@@ -8,7 +8,7 @@
 - [ ] Data Types
     - [X] `int`
     - [X] `float`
-    - [ ] `bool`
+    - [X] `bool`
     - [ ] `char`
     - [X] `type[]` - dynamic arrays (supporting multiple dimensions)
     - [X] `str`

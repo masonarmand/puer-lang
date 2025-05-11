@@ -18,7 +18,7 @@
 #define DEFINE_CMP_FN(name, type, field, op) \
         static Var name##_##type(Var a, Var b) { \
                 Var out; \
-                set_int(&out, (a.data.field op b.data.field)); \
+                set_bool(&out, (a.data.field op b.data.field)); \
                 return out; \
         }
 
