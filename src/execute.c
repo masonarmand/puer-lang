@@ -214,7 +214,7 @@ void eval_vardecl(Node* node)
 
         /* if var is initialized with a value */
         if (node->n_children > 0) {
-                Var result = eval_expr(GETCHILD(node, 0));
+                Var result = eval_expr(node->children[0]);
 
                 if (result.type != node->vartype) {
                         die(node, "init expr type mismatch for '%s'", node->varname);
@@ -236,7 +236,7 @@ void eval_assign(Node* node)
                 die(node, "assignment to undeclared variable '%s'", node->varname);
         }
 
-        result = eval_expr(GETCHILD(node, 0));
+        result = eval_expr(node->children[0]);
         if (result.type != v->type)
                 die(node, "Type error: cannot assign to variable '%s'", node->varname);
         v->data = result.data;

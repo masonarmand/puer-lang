@@ -9,8 +9,6 @@
 #include "var.h"
 #include <stdarg.h>
 
-#define GETCHILD(node, n) ((node)->children[(n)])
-
 typedef enum {
         NODE_NOP,
         NODE_NUM,
