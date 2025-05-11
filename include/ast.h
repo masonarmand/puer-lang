@@ -69,6 +69,7 @@ typedef struct Node {
         int lineno;
         int column;
 
+        int ndims;
 
         int ival; /* for NODE_NUM */
         float fval; /* for NODE_FLOAT */

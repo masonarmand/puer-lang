@@ -1,0 +1,11 @@
+int[] a;
+append(a, 10);
+append(a, 20);
+
+int[] b;
+append(b, 10);
+append(b, 20);
+
+int[] c;
+append(c, 10);
+append(c, 20);

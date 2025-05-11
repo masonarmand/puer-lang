@@ -54,7 +54,9 @@ Node* makeNode(NodeType type, int n_children, ...)
         n->type = type;
         n->n_children = n_children;
         n->children = malloc(sizeof(Node*) * n_children);
+        n->vartype = TYPE_VOID;
         n->varname = NULL;
+        n->ndims = 0;
 
         va_list args;
         va_start(args, n_children);

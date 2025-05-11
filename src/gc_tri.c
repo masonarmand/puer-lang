@@ -167,6 +167,9 @@ int gc_collect_step(void)
 
 void gc_collect_full(void)
 {
+        /* finish previous cycle */
+        while (gc_collect_step()) {}
+
         gc_begin_cycle();
         while (gc_step()) {}
         gc_sweep_all();
