@@ -1,0 +1,12 @@
+
+int g;
+println("press q to quit, or press other key to see ascii value");
+
+while ((g = getch()) != 'q') {
+        println(g);
+}
+
+println("regular assignment (press a key)");
+int k = getch();
+println("int k =", k);
+

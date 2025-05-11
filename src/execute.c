@@ -30,7 +30,7 @@ void eval_seq(Node* node);
 void eval_print(Node* node);
 void eval_println(Node* node);
 void eval_vardecl(Node* node);
-void eval_assign(Node* node);
+void eval_assign_stmt(Node* node);
 void eval_if(Node* node);
 void eval_ifelse(Node* node);
 void eval_for(Node* node);
@@ -38,10 +38,12 @@ void eval_while(Node* node);
 void eval_nop(Node* node);
 void eval_funcdef(Node* node);
 void eval_funccall_stmt(Node* node);
-void eval_idxassign(Node* node);
+void eval_idxassign_stmt(Node* node);
 void eval_arraydecl(Node* node);
 
 Var eval_funccall(Node* node);
+Var eval_assign_expr(Node* node);
+Var eval_idxassign_expr(Node* node);
 
 /* helpers */
 void print_var(Node* node, const Var* v);
@@ -55,14 +57,14 @@ void init_handlers(void)
         handlers[NODE_PRINT]     = eval_print;
         handlers[NODE_PRINTLN]   = eval_println;
         handlers[NODE_VARDECL]   = eval_vardecl;
-        handlers[NODE_ASSIGN]    = eval_assign;
+        handlers[NODE_ASSIGN]    = eval_assign_stmt;
         handlers[NODE_IF]        = eval_if;
         handlers[NODE_IFELSE]    = eval_ifelse;
         handlers[NODE_FOR]       = eval_for;
         handlers[NODE_WHILE]     = eval_while;
         handlers[NODE_FUNCDEF]   = eval_funcdef;
         handlers[NODE_FUNCCALL]  = eval_funccall_stmt;
-        handlers[NODE_IDXASSIGN] = eval_idxassign;
+        handlers[NODE_IDXASSIGN] = eval_idxassign_stmt;
         handlers[NODE_ARRAYDECL] = eval_arraydecl;
 }
 
@@ -229,7 +231,12 @@ void eval_vardecl(Node* node)
         env_set(node->varname, v);
 }
 
-void eval_assign(Node* node)
+void eval_assign_stmt(Node* node)
+{
+        (void) eval_assign_expr(node);
+}
+
+Var eval_assign_expr(Node* node)
 {
         Var* v = env_get(node->varname);
         Var result;
@@ -242,7 +249,9 @@ void eval_assign(Node* node)
         if (result.type != v->type)
                 die(node, "Type error: cannot assign to variable '%s'", node->varname);
         v->data = result.data;
+        return result;
 }
+
 
 void eval_if(Node* node)
 {
@@ -386,7 +395,12 @@ Var eval_funccall(Node* node)
         return g_retval;
 }
 
-void eval_idxassign(Node* node)
+void eval_idxassign_stmt(Node* node)
+{
+        (void) eval_idxassign_expr(node);
+}
+
+Var eval_idxassign_expr(Node* node)
 {
         Var container = eval_expr(node->children[0]);
         Var idx = eval_expr(node->children[1]);
@@ -426,6 +440,7 @@ void eval_idxassign(Node* node)
         else {
                 die(node, "Cannot index‐assign into type %d", container.type);
         }
+        return val;
 }
 
 void eval_arraydecl(Node* node)
@@ -596,6 +611,10 @@ Var eval_expr(Node* node)
                 return v;
         case NODE_FUNCCALL:
                 return eval_funccall(node);
+        case NODE_ASSIGN:
+                return eval_assign_expr(node);
+        case NODE_IDXASSIGN:
+                return eval_idxassign_expr(node);
         case NODE_NOT: {
                 Var inner = eval_expr(node->children[0]);
                 if (inner.type != TYPE_BOOL && inner.type != TYPE_INT) {

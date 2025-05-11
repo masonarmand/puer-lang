@@ -62,6 +62,7 @@ int yycolumn = 1;
 '\\\\'   { yylval.ival = '\\'; return CHAR; }
 '\\\''   { yylval.ival = '\''; return CHAR; }
 
+"="                      return ASSIGN;
 
 "+"                      return ADD;
 "-"                      return SUB;

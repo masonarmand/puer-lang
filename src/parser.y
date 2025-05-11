@@ -58,7 +58,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %nonassoc RETVOID
 %right ARROW
 %left LBRACKET RBRACKET
-%nonassoc ASSIGN
+%right ASSIGN
 
 %left OR
 %left AND
@@ -79,6 +79,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token <ident> STRING
 %token <ival> CHAR
 
+%token ASSIGN
 %token SEMICOLON
 %token LPAREN RPAREN
 %token LBRACE RBRACE
@@ -98,6 +99,7 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %type <node> control_stmt opt_stmt opt_expr stmt_end top_stmt_end
 %type <node> array_items dims opt_initializer
 %type <node> function_def param_list arg_list
+%type <node> varassign
 %type <vartype> opt_return
 
 
@@ -223,7 +225,7 @@ opt_expr
 
 opt_initializer
     : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
-    | '=' expr                   { $$ = $2; }
+    | ASSIGN expr                { $$ = $2; }
     ;
 
 dims
@@ -265,14 +267,20 @@ stmt
         $$ = n;
     }
     | TYPEKEYWORD IDENT          { $$ = N(NODE_VARDECL, @$, 0); $$->varname = $2; $$->vartype = $1; }
-    | TYPEKEYWORD IDENT '=' expr { $$ = N(NODE_VARDECL, @$, 1, $4); $$->varname = $2; $$->vartype = $1; }
-    | IDENT '=' expr             { $$ = N(NODE_ASSIGN, @$, 1, $3); $$->varname = $1; }
+    | TYPEKEYWORD IDENT ASSIGN expr { $$ = N(NODE_VARDECL, @$, 1, $4); $$->varname = $2; $$->vartype = $1; }
     | BREAK                      { $$ = N(NODE_BREAK, @$, 0); }
     | CONTINUE                   { $$ = N(NODE_CONTINUE, @$, 0); }
     | RETURN expr                { $$ = N(NODE_RETURN, @$, 1, $2); }
     | RETURN                     { $$ = N(NODE_RETURN, @$, 0); $$->vartype = TYPE_VOID; }
     | expr                       { $$ = $1; }
-    | expr LBRACKET expr RBRACKET '=' expr %prec ASSIGN
+    ;
+
+varassign
+    : IDENT ASSIGN expr %prec ASSIGN
+    {
+        $$ = N(NODE_ASSIGN, @$, 1, $3); $$->varname = $1;
+    }
+    | expr LBRACKET expr RBRACKET ASSIGN expr %prec ASSIGN
     {
          $$ = N(NODE_IDXASSIGN, @$, 3, $1, $3, $6);
     }
@@ -327,6 +335,7 @@ expr
     | expr LBRACKET expr RBRACKET { $$ = N(NODE_IDX, @$, 2, $1, $3); }
     | LBRACKET RBRACKET          { $$ = N(NODE_ARRAYLIT, @$, 0); }
     | LBRACKET array_items RBRACKET { $$ = $2; }
+    | varassign                  { $$ = $1; }
     ;
 %%
 

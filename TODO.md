@@ -17,7 +17,7 @@
 - [X] Garbage Collection
 - [ ] fix grammar and handling of n-dimensional arrays so that functions can return
 multi dimensional arrays.
-- [ ] Make assignment (`=`) work as an expression
+- [X] Make assignment (`=`) work as an expression
 - [ ] shorthand expressions
     - [ ] `++`, `--`
     - [ ] `+=`, `-=`, `/=`, `*=`, `%=`
