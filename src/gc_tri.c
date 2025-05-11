@@ -20,6 +20,7 @@ typedef struct GC_Header {
 
         GC_ScanFn scan;
         int marked;
+        size_t payload_size;
         /* payload*/
 } GC_Header;
 
@@ -75,10 +76,13 @@ void* gc_alloc(size_t size, GC_ScanFn scan)
         void* payload;
         if (!h)
                 die(NULL, "Out of Memory Error");
+
         h->marked = 0;
         h->scan = scan;
         h->prev = NULL;
         h->next = heap_head;
+        h->payload_size = size;
+
         if (heap_head)
                 heap_head->prev = h;
         heap_head = h;
@@ -89,6 +93,23 @@ void* gc_alloc(size_t size, GC_ScanFn scan)
                 mark_obj(payload);
 
         return payload;
+}
+
+void* gc_realloc(void* ptr, size_t new_size, GC_ScanFn scan)
+{
+        GC_Header* old_h;
+        size_t old_size;
+        void* new_p;
+
+        if (!ptr)
+                return gc_alloc(new_size, scan);
+
+        old_h = HEADER_OF(ptr);
+        old_size = old_h->payload_size;
+        new_p = gc_alloc(new_size, scan);
+        memcpy(new_p, ptr, old_size < new_size ? old_size : new_size);
+        return new_p;
+
 }
 
 void gc_mark_root(void* payload)

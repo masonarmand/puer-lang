@@ -8,6 +8,7 @@
 #include "puerlib.h"
 #include "var.h"
 #include "puerstring.h"
+#include "scan.h"
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ Var input(Node* node, Var* argv)
         unsigned int chunk = 64;
         unsigned int bufcap = chunk;
         unsigned int len = 0;
-        char* buf = malloc(bufcap);
+        char* buf = gc_alloc(bufcap, scan_raw);
         int c;
         Var out;
         String* prompt = argv[0].data.s;
@@ -50,7 +51,7 @@ Var input(Node* node, Var* argv)
         while ((c = fgetc(stdin)) != EOF && c != '\n') {
                 if (len + 1 >= bufcap) {
                         bufcap += chunk;
-                        buf = realloc(buf, bufcap);
+                        buf = gc_realloc(buf, bufcap, scan_raw);
                         if (!buf)
                                 die(node, "Error: Out of memory in input()");
                 }

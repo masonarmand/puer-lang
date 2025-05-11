@@ -32,8 +32,11 @@ void arraylist_grow(ArrayList* a)
          * instead of just doubling it
          */
         int new_cap = a->capacity *= 2;
-        Var* new_items = gc_alloc(sizeof(Var) * new_cap, scan_raw);
-        memcpy(new_items, a->items, sizeof(Var) * a->size);
+        Var* new_items = gc_realloc(
+                a->items,
+                sizeof(Var) * new_cap,
+                scan_raw
+        );
 
         a->items = new_items;
         a->capacity = new_cap;

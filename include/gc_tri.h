@@ -11,6 +11,7 @@ typedef void (*GC_ScanFn)(void* payload, GC_MarkFn mark);
 
 void gc_init(void);
 void* gc_alloc(size_t size, GC_ScanFn scan);
+void* gc_realloc(void* ptr, size_t new_size, GC_ScanFn scan);
 int gc_collect_step(void);
 
 void gc_mark_root(void* payload);
