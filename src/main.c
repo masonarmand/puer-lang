@@ -1,6 +1,9 @@
 #include "ast.h"
+#include "builtin.h"
+#include "func.h"
 #include "puerlib.h"
 #include <stdio.h>
+#include <limits.h>
 
 extern int yyparse();
 extern FILE* yyin;
@@ -23,11 +26,21 @@ int main(int argc, char** argv)
         yylineno = 1;
         yycolumn = 1;
 
-        if (yyparse() == 0) {
+        if (!yyparse()) {
                 /*print_ast(root, 0);*/
+                gc_init();
                 init_puerlib();
                 eval(root);
+
+                /* cleanup */
+                free_ast(root);
+                env_clear();
+                builtin_clear();
+                func_clear();
+                gc_collect_full();
         }
+        fclose(yyin);
+        yylex_destroy();
 
         return 0;
 }

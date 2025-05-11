@@ -1,5 +1,6 @@
 #include "puerstring.h"
 #include "util.h"
+#include "scan.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -13,8 +14,8 @@ void check_str_bounds(String* s, int index)
 String* string_new(const char* cstr)
 {
         unsigned int len = strlen(cstr);
-        String* s = malloc(sizeof(String));
-        s->data = malloc(len + 1);
+        String* s = gc_alloc(sizeof(String), scan_string);
+        s->data = gc_alloc(len + 1, scan_raw);
         memcpy(s->data, cstr, len + 1);
         s->length = len;
         return s;
@@ -23,14 +24,14 @@ String* string_new(const char* cstr)
 String* string_concat(String* a, String* b)
 {
         unsigned int len = a->length + b->length;
-        char* new_data = malloc(len + 1);
+        char* new_data = gc_alloc(len + 1, scan_raw);
         String* result;
 
         memcpy(new_data, a->data, a->length);
         memcpy(new_data + a->length, b->data, b->length);
         new_data[len] = '\0';
 
-        result = malloc(sizeof(String));
+        result = gc_alloc(sizeof(String), scan_string);
         result->data = new_data;
         result->length = len;
 

@@ -156,6 +156,7 @@ opt_return
     | ARROW TYPEKEYWORD %prec RETVOID { $$ = $2; }
     | ARROW TYPEKEYWORD dims %prec RETVOID
     {
+        free_ast($3);
         $$ = TYPE_ARRAY;
     }
     ;

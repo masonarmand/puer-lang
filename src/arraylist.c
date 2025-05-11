@@ -1,15 +1,16 @@
 #include "var.h"
+#include "scan.h"
 #include "arraylist.h"
 #include "puerstring.h"
-#include <stdlib.h>
+#include <string.h>
 
 ArrayList* arraylist_new(VarType type, int initial_capacity)
 {
-        ArrayList* a = malloc(sizeof(ArrayList));
+        ArrayList* a = gc_alloc(sizeof(ArrayList), scan_arraylist);
         a->type = type;
         a->size = 0;
         a->capacity = initial_capacity > 0 ? initial_capacity : 1;
-        a->items = malloc(sizeof(Var) * a->capacity);
+        a->items = gc_alloc(sizeof(Var) * a->capacity, scan_raw);
         return a;
 }
 
@@ -26,8 +27,16 @@ ArrayList* arraylist_clone(const ArrayList* src)
 
 void arraylist_grow(ArrayList* a)
 {
-        a->capacity *= 2;
-        a->items = realloc(a->items, sizeof(Var) * a->capacity);
+        /* TODO
+         * algorithm for determining new capacity
+         * instead of just doubling it
+         */
+        int new_cap = a->capacity *= 2;
+        Var* new_items = gc_alloc(sizeof(Var) * new_cap, scan_raw);
+        memcpy(new_items, a->items, sizeof(Var) * a->size);
+
+        a->items = new_items;
+        a->capacity = new_cap;
 }
 
 void arraylist_push(ArrayList* a, Var v)

@@ -80,6 +80,7 @@ typedef struct Node {
 /* ast.c */
 Node* makeNode(NodeType type, int n_children, ...);
 void print_ast(Node* node, int depth);
+void free_ast(Node* node);
 
 /* execute.c */
 void eval(Node* node);

@@ -54,6 +54,7 @@ Node* makeNode(NodeType type, int n_children, ...)
         n->type = type;
         n->n_children = n_children;
         n->children = malloc(sizeof(Node*) * n_children);
+        n->varname = NULL;
 
         va_list args;
         va_start(args, n_children);
@@ -74,4 +75,23 @@ void print_ast(Node* node, int depth)
         printf("node type: %s\n", node_type_to_str(node->type));
         for (i = 0; i < node->n_children; i++)
                 print_ast(node->children[i], depth + 1);
+}
+
+void free_ast(Node* node)
+{
+        int i;
+        if (!node)
+                return;
+
+        for (i = 0; i < node->n_children; i++) {
+                free_ast(node->children[i]);
+        }
+
+        free(node->children);
+
+        if (node->varname) {
+                free(node->varname);
+        }
+
+        free(node);
 }

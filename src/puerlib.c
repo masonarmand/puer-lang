@@ -122,6 +122,14 @@ Var append(Node* node, Var* argv)
         return out;
 }
 
+Var gc_collect(Node* node, Var* argv)
+{
+        Var out;
+        set_void(&out);
+        gc_collect_full();
+        return out;
+}
+
 void init_puerlib(void)
 {
         REGISTER_BUILTIN(input, TYPE_STRING, TYPE_STRING);
@@ -130,4 +138,5 @@ void init_puerlib(void)
         REGISTER_BUILTIN(clear, TYPE_VOID);
         REGISTER_BUILTIN(len, TYPE_INT, TYPE_ANY);
         REGISTER_BUILTIN(append, TYPE_VOID, TYPE_ANY, TYPE_ANY);
+        REGISTER_BUILTIN(gc_collect, TYPE_VOID);
 }

@@ -7,6 +7,22 @@
 #define ENV_H
 
 #include "var.h"
+#include "uthash.h"
+
+/* typedefs exposed for scan.c */
+typedef struct VarEntry {
+        const char* name;
+        Var val;
+        UT_hash_handle hh;
+} VarEntry;
+
+typedef struct Scope {
+        VarEntry* table;
+        struct Scope* next;
+} Scope;
+
+extern Scope* env_stack;
+
 
 void env_push(void);
 void env_pop(void);

@@ -140,8 +140,12 @@ CtrlSignal eval_block(Node* node)
 
 void eval_seq(Node* node)
 {
-        eval(node->children[0]);
-        eval(node->children[1]);
+        int i;
+        for (i = 0; i < node->n_children; i++) {
+                eval(node->children[i]);
+                gc_collect_step();
+                /*gc_collect_full();*/
+        }
 }
 
 void print_var(Node* node, const Var* v)
