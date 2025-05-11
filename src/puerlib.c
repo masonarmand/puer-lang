@@ -126,7 +126,7 @@ Var gc_collect(Node* node, Var* argv)
 {
         Var out;
         set_void(&out);
-        while (gc_collect_step()) {}
+        gc_collect_full();
         return out;
 }
 

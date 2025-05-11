@@ -11,11 +11,6 @@
 
 typedef void (*StmtHandler)(Node*);
 
-typedef struct {
-        NodeType type;
-        StmtHandler handler;
-} StmtDispatch;
-
 typedef enum {
         CTRL_NONE,
         CTRL_BREAK,
@@ -51,35 +46,32 @@ Var eval_funccall(Node* node);
 /* helpers */
 void print_var(Node* node, const Var* v);
 
-static StmtDispatch handlers[] = {
-        { NODE_NOP, eval_nop },
-        { NODE_SEQ, eval_seq },
-        { NODE_PRINT, eval_print },
-        { NODE_PRINTLN, eval_println },
-        { NODE_VARDECL, eval_vardecl },
-        { NODE_ASSIGN, eval_assign },
-        { NODE_IF, eval_if },
-        { NODE_IFELSE, eval_ifelse },
-        { NODE_FOR, eval_for },
-        { NODE_WHILE, eval_while },
-        { NODE_FUNCDEF, eval_funcdef },
-        { NODE_FUNCCALL, eval_funccall_stmt },
-        { NODE_IDXASSIGN, eval_idxassign },
-        { NODE_ARRAYDECL, eval_arraydecl },
-        { -1, NULL },
-};
+static StmtHandler handlers[NODE_LASTNODE];
+
+void init_handlers(void)
+{
+        handlers[NODE_NOP]       = eval_nop;
+        handlers[NODE_SEQ]       = eval_seq;
+        handlers[NODE_PRINT]     = eval_print;
+        handlers[NODE_PRINTLN]   = eval_println;
+        handlers[NODE_VARDECL]   = eval_vardecl;
+        handlers[NODE_ASSIGN]    = eval_assign;
+        handlers[NODE_IF]        = eval_if;
+        handlers[NODE_IFELSE]    = eval_ifelse;
+        handlers[NODE_FOR]       = eval_for;
+        handlers[NODE_WHILE]     = eval_while;
+        handlers[NODE_FUNCDEF]   = eval_funcdef;
+        handlers[NODE_FUNCCALL]  = eval_funccall_stmt;
+        handlers[NODE_IDXASSIGN] = eval_idxassign;
+        handlers[NODE_ARRAYDECL] = eval_arraydecl;
+}
 
 void eval(Node* node)
 {
-        unsigned int i;
-        for (i = 0; handlers[i].handler; i++) {
-                if (handlers[i].type == node->type) {
-                        handlers[i].handler(node);
-                        return;
-                }
-        }
-
-        die(node, "unhandled stmt type: %d", node->type);
+        StmtHandler h = handlers[node->type];
+        if (!h)
+                die(node, "unhandled stmt type: %d", node->type);
+        h(node);
 }
 
 /* for handling break & continue in loops */

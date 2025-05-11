@@ -57,7 +57,10 @@ typedef enum {
         /* functions */
         NODE_FUNCDEF,
         NODE_FUNCCALL,
-        NODE_RETURN
+        NODE_RETURN,
+
+        /* for getting enum size */
+        NODE_LASTNODE
 } NodeType;
 
 typedef struct Node {
@@ -86,5 +89,6 @@ void free_ast(Node* node);
 /* execute.c */
 void eval(Node* node);
 Var eval_expr(Node* node);
+void init_handlers(void);
 
 #endif

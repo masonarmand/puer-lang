@@ -28,6 +28,7 @@ int main(int argc, char** argv)
 
         if (!yyparse()) {
                 /*print_ast(root, 0);*/
+                init_handlers();
                 gc_init();
                 init_puerlib();
                 eval(root);
