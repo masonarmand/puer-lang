@@ -4,21 +4,6 @@
 #include "var.h"
 #include "ast.h"
 
-typedef enum {
-        OP_ADD,
-        OP_SUB,
-        OP_MUL,
-        OP_DIV,
-        OP_MOD,
-        OP_LT,
-        OP_GT,
-        OP_LE,
-        OP_GE,
-        OP_EQ,
-        OP_NE,
-        NUM_OPS
-} BinOp;
-
 typedef Var (*BinOpFunc)(Var a, Var b);
 
 typedef struct {
