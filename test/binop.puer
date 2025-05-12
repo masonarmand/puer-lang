@@ -1,9 +1,9 @@
-def is_even(int a) -> int
+def is_even(int a) -> bool
 {
         return a % 2 == 0;
 }
 
-def is_odd(int a) -> int
+def is_odd(int a) -> bool
 {
         return !(is_even(a));
 }
@@ -15,3 +15,7 @@ println(is_even(4) && is_odd(4)); // 0
 
 println(is_even(4) || is_odd(4)); // 1
 println(is_even(5) || is_odd(5)); // 1
+
+int[] arr = [1, 2, 3, 4, 5];
+arr[0] = arr[0] + 1;
+println(arr[0]);

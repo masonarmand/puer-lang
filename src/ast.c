@@ -36,6 +36,10 @@ static const char* node_type_names[] = {
         [NODE_FUNCDEF]  = "NODE_FUNCDEF",
         [NODE_FUNCCALL] = "NODE_FUNCCALL",
         [NODE_RETURN]   = "NODE_RETURN",
+        [NODE_IDX]      = "NODE_IDX",
+        [NODE_IDXASSIGN]= "NODE_IDXASSIGN",
+        [NODE_ARRAYLIT] = "NODE_ARRAYLIT",
+        [NODE_ARRAYDECL]= "NODE_ARRAYDECL",
 };
 
 static const char* node_type_to_str(NodeType t)

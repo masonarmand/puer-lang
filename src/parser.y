@@ -39,17 +39,16 @@ Node* root;
         enum VarType vartype;
 }
 
+%right '='
 %nonassoc RET
 %right ARROW
-%left '[' ']'
-%right '='
-
 %left OR
 %left AND
 %nonassoc EQ NE
 %nonassoc LT GT LE GE
 %left ADD SUB
 %left MUL DIV MOD
+%left '[' ']'
 %right NOT UMINUS
 %nonassoc IFX
 %nonassoc ELSE
@@ -93,8 +92,8 @@ puer
     ;
 
 top_code
-    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
-    | top_code top_stmt_end      { $$ = node(NODE_SEQ, @$, 2, $1, $2); }
+    : /* empty */                { $$ = node(NODE_SEQ, @$, 0); }
+    | top_code top_stmt_end      { $$ = node_append($1, $2); }
     ;
 
 top_stmt_end
@@ -107,8 +106,8 @@ block
     ;
 
 code
-    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
-    | code stmt_end              { $$ = node(NODE_SEQ, @$, 2, $1, $2); }
+    : /* empty */                { $$ = node(NODE_SEQ, @$, 0); }
+    | code stmt_end              { $$ = node_append($1, $2); }
     ;
 
 stmt_end
