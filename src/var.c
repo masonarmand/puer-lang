@@ -101,6 +101,9 @@ void cast_to(Var* v, VarType target)
                 break;
         case TYPE_BOOL:
                 switch (v->type) {
+                case TYPE_INT:
+                        v->data.b = v->data.i;
+                        break;
                 case TYPE_FLOAT:
                         v->data.b = (int)v->data.f;
                         break;

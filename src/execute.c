@@ -40,13 +40,18 @@ void eval_funcdef(Node* node);
 void eval_funccall_stmt(Node* node);
 void eval_idxassign_stmt(Node* node);
 void eval_arraydecl(Node* node);
+void eval_compount_stmt(Node* node);
 
 Var eval_funccall(Node* node);
 Var eval_assign_expr(Node* node);
 Var eval_idxassign_expr(Node* node);
+Var eval_compound_expr(Node* node);
 
 /* helpers */
 void print_var(Node* node, const Var* v);
+int var_to_idx(Node* node, Var v);
+Var index_store(Node* node, Var container, int idx, Var val);
+Var index_load(Node* node, Var container, int idx);
 
 static StmtHandler handlers[NODE_LASTNODE];
 
@@ -403,44 +408,11 @@ void eval_idxassign_stmt(Node* node)
 Var eval_idxassign_expr(Node* node)
 {
         Var container = eval_expr(node->children[0]);
-        Var idx = eval_expr(node->children[1]);
+        Var v = eval_expr(node->children[1]);
+        int idx = var_to_idx(node, v);
         Var val = eval_expr(node->children[2]);
-        int i;
 
-        if (idx.type != TYPE_INT)
-                die(node, "index must be an integer");
-
-        i = idx.data.i;
-
-        if (container.type == TYPE_STRING) {
-                if (val.type != TYPE_INT)
-                        die(node, "Can only assign char to a string character");
-                string_set(container.data.s, i, (char)val.data.i);
-        }
-        else if (container.type == TYPE_ARRAY) {
-                ArrayList* a = container.data.a;
-
-                if (i < 0 || i >= a->size) {
-                        die(
-                                node,
-                                "array index %d out of bounds (size %d)",
-                                i, a->size
-                        );
-                }
-
-                if (val.type != a->type) {
-                        die(
-                                node,
-                                "Type mismatch: array holds %d but got %d",
-                                a->type, val.type
-                        );
-                }
-                a->items[i] = val;
-        }
-        else {
-                die(node, "Cannot index‐assign into type %d", container.type);
-        }
-        return val;
+        return index_store(node, container, idx, val);
 }
 
 void eval_arraydecl(Node* node)
@@ -450,6 +422,7 @@ void eval_arraydecl(Node* node)
         int ndims = dims_node->n_children;
         Var value;
 
+        /* TODO split into two functions */
         if (ndims == 0) {
                 if (init_node->type != NODE_NOP) {
                         value = eval_expr(init_node);
@@ -513,22 +486,73 @@ Var eval_arraylit(Node* node)
         return out;
 }
 
-Var eval_binop(Node* node)
+int var_to_idx(Node* node, Var v)
 {
-        Var a;
-        Var b;
+        int out;
+        switch (v.type) {
+        case TYPE_INT:
+                out = v.data.i;
+                break;
+        case TYPE_UINT:
+                out = (int) v.data.ui;
+                break;
+        case TYPE_LONG:
+                out = (int) v.data.l;
+                break;
+        default:
+                die(node, "index can't be of type: '%d'", v.type);
+
+        }
+        if (out < 0)
+                die(node, "index must be positive");
+        return out;
+}
+
+Var index_load(Node* node, Var container, int idx)
+{
+        Var out;
+
+        switch (container.type) {
+        case TYPE_STRING:
+                String* s = container.data.s;
+                char c;
+                check_str_bounds(s, idx);
+                c = string_get(s, idx);
+                set_int(&out, (int)c);
+                return out;
+        case TYPE_ARRAY:
+                ArrayList* a = container.data.a;
+                check_arr_bounds(a, idx);
+                return a->items[idx];
+        default:
+                die(node, "cannot index into type %d", container.type);
+        }
+}
+
+Var index_store(Node* node, Var container, int idx, Var val)
+{
+        switch (container.type) {
+        case TYPE_STRING:
+                if (val.type != TYPE_INT)
+                        die(node, "can only assign char to string character");
+                string_set(container.data.s, idx, (char)val.data.i);
+                return val;
+        case TYPE_ARRAY:
+                ArrayList* a = container.data.a;
+                if (val.type != a->type)
+                        die(node, "type mismatch: array holds %d but got %d", a->type, val.type);
+                a->items[idx] = val;
+                return val;
+        default:
+                die(node, "cannot index assign into type %d", container.type);
+        }
+}
+
+Var do_binop(Node* at, BinOp op, Var a, Var b)
+{
         VarType type;
         BinOpFunc func;
-        BinOp op = get_binop(node->type);
 
-        if (op == -1)
-                die(node, "Unhandled expr node type: '%d'", node->type);
-
-        a = eval_expr(node->children[0]);
-        b = eval_expr(node->children[1]);
-        /*type = common_type(a.type, b.type);*/
-
-        /* overide '+' for string concat */
         if (a.type == TYPE_STRING && b.type == TYPE_STRING && op == OP_ADD) {
                 Var result;
                 result.type = TYPE_STRING;
@@ -537,44 +561,84 @@ Var eval_binop(Node* node)
         }
 
         type = coerce(&a, &b);
-
         func = type_ops[type].ops[op];
-
         if (!func)
-                die(node, "Operator not supported for this type");
+                die(at, "Operator not supported for this type");
 
         return func(a, b);
+}
+
+Var eval_binop(Node* node)
+{
+        Var a;
+        Var b;
+        VarType type;
+        BinOpFunc func;
+        BinOp op = node->op;
+
+        a = eval_expr(node->children[0]);
+        b = eval_expr(node->children[1]);
+
+        return do_binop(node, op, a, b);
+}
+
+void eval_compount_stmt(Node* node)
+{
+        (void) eval_compound_expr(node);
+}
+
+Var eval_compound_expr(Node* node)
+{
+        Node* L = node->children[0];
+        Node* R = node->children[1];
+        Var rhs;
+        Var result;
+        BinOp op = node->op;
+        Var old;
+        Var* v;
+        Var container;
+        int idx;
+
+        switch (L->type) {
+        case NODE_VAR:
+                v = env_get(L->varname);
+                if (!v)
+                        die(node, "undeclared variable '%s'", L->varname);
+                old = *v;
+                break;
+        case NODE_IDX:
+                Var idxv = eval_expr(L->children[1]);
+
+                container = eval_expr(L->children[0]);
+                idx = var_to_idx(node, idxv);
+                old = index_load(node, container, idxv.data.i);
+                break;
+        default:
+                die(node, "invalid LHS in compound assign");
+                break;
+        }
+
+        rhs = eval_expr(R);
+        result = do_binop(node, op, old, rhs);
+
+        if (L->type == NODE_VAR) {
+                result = implicit_convert(result, v->type);
+                env_set(L->varname, result);
+        }
+        else {
+                int is_str = container.type == TYPE_STRING;
+                VarType type = (is_str ? TYPE_INT : container.data.a->type);
+                result = implicit_convert(result, type);
+                index_store(node, container, idx, result);
+        }
 }
 
 Var eval_idx(Node* node)
 {
         Var container = eval_expr(node->children[0]);
-        Var idx = eval_expr(node->children[1]);
-        Var v;
-        int i;
-
-        if (idx.type != TYPE_INT)
-                die(node, "index must be an integer");
-
-        i = idx.data.i;
-
-        if (container.type == TYPE_STRING) {
-                char c;
-                if (i < 0 || i >= (int)container.data.s->length)
-                        die(node, "string index %d out of bounds", i);
-                c = string_get(container.data.s, i);
-                set_int(&v, (int)c);
-                return v;
-        }
-        else if (container.type == TYPE_ARRAY) {
-                ArrayList* a = container.data.a;
-                if (i < 0 || i >= a->size)
-                        die(node, "array index %d out of bounds (size %d)", i, a->size);
-                return a->items[i];
-        }
-        else {
-                die(node, "cannot index type %d", container.type);
-        }
+        Var v = eval_expr(node->children[1]);
+        int idx = var_to_idx(node, v);
+        return index_load(node, container, idx);
 }
 
 Var eval_expr(Node* node)
@@ -626,28 +690,32 @@ Var eval_expr(Node* node)
         case NODE_AND: {
                 Var left = eval_expr(node->children[0]);
                 Var right;
-                if (!as_int(left)) {
-                        set_int(&left, 0);
+                if (!as_bool(left)) {
+                        set_bool(&left, 0);
                         return left;
                 }
                 right = eval_expr(node->children[1]);
-                set_bool(&right, as_int(right));
+                set_bool(&right, as_bool(right));
                 return right;
         }
         case NODE_OR: {
                 Var left = eval_expr(node->children[0]);
                 Var right;
-                if (as_int(left)) {
-                        set_int(&left, 1);
+                if (as_bool(left)) {
+                        set_bool(&left, 1);
                         return left;
                 }
                 right = eval_expr(node->children[1]);
-                set_bool(&right, as_int(right));
+                set_bool(&right, as_bool(right));
                 return right;
         }
         case NODE_IDX:
                 return eval_idx(node);
-        default:
+        case NODE_BINOP:
                 return eval_binop(node);
+        case NODE_COMPOUND:
+                return eval_compound_expr(node);
+        default:
+                die(node, "unhandled expression type: %s", node->type);
         }
 }

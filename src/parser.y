@@ -39,7 +39,7 @@ Node* root;
         enum VarType vartype;
 }
 
-%right '='
+%right '=' ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 %nonassoc RET
 %right ARROW
 %left OR
@@ -68,6 +68,7 @@ Node* root;
 %token '{' '}'
 %token '[' ']'
 %token ADD SUB MUL DIV
+%token ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
 %token LT GT LE GE EQ NE
 %token NOT
 %token AND OR
@@ -138,23 +139,31 @@ expr
     | IDENT                      { $$ = node(NODE_VAR, @1, 0); setname($$, $1); }
     | STRING                     { $$ = node(NODE_STRING, @1, 0); setname($$, $1); }
     | CHAR                       { $$ = node(NODE_CHAR, @1, 0); $$->ival = $1; }
-    | expr LT expr               { $$ = node(NODE_LT, @$, 2, $1, $3); }
-    | expr GT expr               { $$ = node(NODE_GT, @$, 2, $1, $3); }
-    | expr LE expr               { $$ = node(NODE_LE, @$, 2, $1, $3); }
-    | expr GE expr               { $$ = node(NODE_GE, @$, 2, $1, $3); }
-    | expr EQ expr               { $$ = node(NODE_EQ, @$, 2, $1, $3); }
-    | expr NE expr               { $$ = node(NODE_NE, @$, 2, $1, $3); }
-    | expr ADD expr              { $$ = node(NODE_ADD, @$, 2, $1, $3); }
-    | expr SUB expr              { $$ = node(NODE_SUB, @$, 2, $1, $3); }
-    | expr MUL expr              { $$ = node(NODE_MUL, @$, 2, $1, $3); }
-    | expr DIV expr              { $$ = node(NODE_DIV, @$, 2, $1, $3); }
-    | expr MOD expr              { $$ = node(NODE_MOD, @$, 2, $1, $3); }
+    | expr LT expr               { $$ = node_binop(OP_LT, @$, $1, $3); }
+    | expr GT expr               { $$ = node_binop(OP_GT, @$, $1, $3); }
+    | expr LE expr               { $$ = node_binop(OP_LE, @$, $1, $3); }
+    | expr GE expr               { $$ = node_binop(OP_GE, @$, $1, $3); }
+    | expr EQ expr               { $$ = node_binop(OP_EQ, @$, $1, $3); }
+    | expr NE expr               { $$ = node_binop(OP_NE, @$, $1, $3); }
+    | expr ADD expr              { $$ = node_binop(OP_ADD, @$, $1, $3); }
+    | expr SUB expr              { $$ = node_binop(OP_SUB, @$, $1, $3); }
+    | expr MUL expr              { $$ = node_binop(OP_MUL, @$, $1, $3); }
+    | expr DIV expr              { $$ = node_binop(OP_DIV, @$, $1, $3); }
+    | expr MOD expr              { $$ = node_binop(OP_MOD, @$, $1, $3); }
+
+    | expr AND expr              { $$ = node(NODE_AND, @$, 2, $1, $3); }
+    | expr OR expr               { $$ = node(NODE_OR, @$, 2, $1, $3); }
+
+    | expr ADD_ASSIGN expr       { $$ = node_compound(OP_ADD, @$, $1, $3); }
+    | expr SUB_ASSIGN expr       { $$ = node_compound(OP_SUB, @$, $1, $3); }
+    | expr MUL_ASSIGN expr       { $$ = node_compound(OP_MUL, @$, $1, $3); }
+    | expr DIV_ASSIGN expr       { $$ = node_compound(OP_DIV, @$, $1, $3); }
+    | expr MOD_ASSIGN expr       { $$ = node_compound(OP_MOD, @$, $1, $3); }
+
     | SUB expr %prec UMINUS      { $$ = node_uminus($2, @$); }
     | '(' expr ')'               { $$ = $2; }
     | IDENT '(' arg_list ')'     { $$ = node(NODE_FUNCCALL, @$, 1, $3); setname($$, $1); }
     | NOT expr                   { $$ = node(NODE_NOT, @$, 1, $2); }
-    | expr AND expr              { $$ = node(NODE_AND, @$, 2, $1, $3); }
-    | expr OR expr               { $$ = node(NODE_OR, @$, 2, $1, $3); }
     | expr '[' expr ']'          { $$ = node(NODE_IDX, @$, 2, $1, $3); }
     | '[' ']'                    { $$ = node(NODE_ARRAYLIT, @$, 0); }
     | '[' array_items ']'        { $$ = $2; }

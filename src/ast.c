@@ -11,11 +11,7 @@ static const char* node_type_names[] = {
         [NODE_NOP]      = "NODE_NOP",
         [NODE_NUM]      = "NODE_NUM",
         [NODE_FLOAT]    = "NODE_FLOAT",
-        [NODE_ADD]      = "NODE_ADD",
-        [NODE_SUB]      = "NODE_SUB",
-        [NODE_MUL]      = "NODE_MUL",
-        [NODE_DIV]      = "NODE_DIV",
-        [NODE_MOD]      = "NODE_MOD",
+        [NODE_BINOP]    = "NODE_BINOP",
         [NODE_PRINT]    = "NODE_PRINT",
         [NODE_PRINTLN]  = "NODE_PRINTLN",
         [NODE_SEQ]      = "NODE_SEQ",
@@ -73,6 +69,18 @@ Node* node(NodeType type, YYLTYPE loc, int n_children, ...)
         return n;
 }
 
+Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs)
+{
+        Node* binop = node(NODE_BINOP, loc, 2, lhs, rhs);
+        binop->op = op;
+}
+
+Node* node_compound(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs)
+{
+        Node* compound = node(NODE_COMPOUND, loc, 2, lhs, rhs);
+        compound->op = op;
+}
+
 void setvar(Node* node, VarType type, char* varname)
 {
         node->vartype = type;
@@ -92,8 +100,10 @@ void settype(Node* node, VarType type)
 Node* node_uminus(Node* n, YYLTYPE loc)
 {
         Node* zero = node(NODE_NUM, loc, 0);
+        Node* binop = node(NODE_BINOP, loc, 2, zero, n);
         zero->ival = 0;
-        return node(NODE_SUB, loc, 2, zero, n);
+        binop->op = OP_SUB;
+
 }
 
 Node* node_param(VarType type, char* varname, YYLTYPE loc)

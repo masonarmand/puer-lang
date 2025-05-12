@@ -82,6 +82,9 @@ DEFINE_CMP_FN(ge, float, f, >=)
 DEFINE_CMP_FN(eq, float, f, ==)
 DEFINE_CMP_FN(ne, float, f, !=)
 
+/* BOOL */
+DEFINE_CMP_FN(eq,   bool, b, ==)
+DEFINE_CMP_FN(ne,   bool, b, !=)
 
 TypeOps type_ops[] = {
         /* TYPE_INT = 0 */
@@ -91,23 +94,7 @@ TypeOps type_ops[] = {
         /* TYPE_LONG = 2 */
         { { add_long, sub_long, mul_long, div_long, mod_long, lt_long, gt_long, le_long, ge_long, eq_long, ne_long } },
         /* TYPE_FLOAT = 3 */
-        { { add_float, sub_float, mul_float, div_float, 0, lt_float, gt_float, le_float, ge_float, eq_float, ne_float } }
+        { { add_float, sub_float, mul_float, div_float, 0, lt_float, gt_float, le_float, ge_float, eq_float, ne_float } },
+        /* TYPE_BOOL = 4 */
+        { { 0, 0, 0, 0, 0, 0, 0, 0, 0, eq_bool, ne_bool, 0, 0 } },
 };
-
-BinOp get_binop(NodeType type)
-{
-        switch (type) {
-        case NODE_ADD: return OP_ADD;
-        case NODE_SUB: return OP_SUB;
-        case NODE_MUL: return OP_MUL;
-        case NODE_DIV: return OP_DIV;
-        case NODE_MOD: return OP_MOD;
-        case NODE_LT:  return OP_LT;
-        case NODE_GT:  return OP_GT;
-        case NODE_LE:  return OP_LE;
-        case NODE_GE:  return OP_GE;
-        case NODE_EQ:  return OP_EQ;
-        case NODE_NE:  return OP_NE;
-        default: return -1;
-        }
-}

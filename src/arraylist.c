@@ -50,6 +50,12 @@ void arraylist_push(ArrayList* a, Var v)
         a->items[a->size++] = v;
 }
 
+void check_arr_bounds(ArrayList* a, int index)
+{
+        if (index < 0 || (unsigned int) index >= a->size)
+                die(NULL, "index out of bounds for index: %d in array", index);
+}
+
 Var build_zero_array_1d(VarType base, int size)
 {
         ArrayList* a = arraylist_new(base, size);
