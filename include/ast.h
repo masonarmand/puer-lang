@@ -9,11 +9,6 @@
 #include "var.h"
 #include <stdarg.h>
 
-
-/* macros */
-#define N(T, LOC, ...)  \
-    ({ Node* _tmp = makeNode((T), __VA_ARGS__); set_loc(_tmp, (LOC)); _tmp; })
-
 typedef enum {
         NODE_NOP,
         NODE_NUM,
