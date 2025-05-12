@@ -9,6 +9,11 @@
 #include "var.h"
 #include <stdarg.h>
 
+
+/* macros */
+#define N(T, LOC, ...)  \
+    ({ Node* _tmp = makeNode((T), __VA_ARGS__); set_loc(_tmp, (LOC)); _tmp; })
+
 typedef enum {
         NODE_NOP,
         NODE_NUM,
@@ -81,8 +86,20 @@ typedef struct Node {
         VarType vartype; /* VARDECL, PARAM, FUNCDECL type */
 } Node;
 
+#include "parser.tab.h"
+
 /* ast.c */
-Node* makeNode(NodeType type, int n_children, ...);
+Node* node(NodeType type, YYLTYPE loc, int n_children, ...);
+Node* node_uminus(Node* n, YYLTYPE loc);
+Node* node_param(VarType type, char* varname, YYLTYPE loc);
+Node* node_param_append(Node* list, VarType type, char* varname, YYLTYPE loc);
+Node* node_append(Node* list, Node* child);
+Node* node_append_type(Node* list, NodeType type, YYLTYPE loc);
+
+void setvar(Node* node, VarType type, char* varname);
+void setname(Node* node, char* varname);
+void settype(Node* node, VarType type);
+
 void print_ast(Node* node, int depth);
 void free_ast(Node* node);
 
@@ -90,5 +107,6 @@ void free_ast(Node* node);
 void eval(Node* node);
 Var eval_expr(Node* node);
 void init_handlers(void);
+
 
 #endif

@@ -62,7 +62,7 @@ int yycolumn = 1;
 '\\\\'   { yylval.ival = '\\'; return CHAR; }
 '\\\''   { yylval.ival = '\''; return CHAR; }
 
-"="                      return ASSIGN;
+"="                      return '=';
 
 "+"                      return ADD;
 "-"                      return SUB;
@@ -92,24 +92,24 @@ int yycolumn = 1;
 "def"                    return DEF;
 "return"                 return RETURN;
 "->"                     return ARROW;
-","                      return COMMA;
+","                      return ',';
 
 "print"                  return PRINT;
 "println"                return PRINTLN;
-";"                      return SEMICOLON;
-"("                      return LPAREN;
-")"                      return RPAREN;
-"{"                      return LBRACE;
-"}"                      return RBRACE;
-"["                      return LBRACKET;
-"]"                      return RBRACKET;
+";"                      return ';';
+"("                      return '(';
+")"                      return ')';
+"{"                      return '{';
+"}"                      return '}';
+"["                      return '[';
+"]"                      return ']';
 
-"int"                    { yylval.vartype = TYPE_INT; return TYPEKEYWORD; }
-"bool"                   { yylval.vartype = TYPE_BOOL; return TYPEKEYWORD; }
-"uint"                   { yylval.vartype = TYPE_UINT; return TYPEKEYWORD; }
-"long"                   { yylval.vartype = TYPE_LONG; return TYPEKEYWORD; }
-"float"                  { yylval.vartype = TYPE_FLOAT; return TYPEKEYWORD; }
-"str"                    { yylval.vartype = TYPE_STRING; return TYPEKEYWORD; }
+"int"                    { yylval.vartype = TYPE_INT; return TYPE; }
+"bool"                   { yylval.vartype = TYPE_BOOL; return TYPE; }
+"uint"                   { yylval.vartype = TYPE_UINT; return TYPE; }
+"long"                   { yylval.vartype = TYPE_LONG; return TYPE; }
+"float"                  { yylval.vartype = TYPE_FLOAT; return TYPE; }
+"str"                    { yylval.vartype = TYPE_STRING; return TYPE; }
 
 "true"                   { yylval.bval = 1; return TRUE; }
 "false"                  { yylval.bval = 0; return FALSE; }

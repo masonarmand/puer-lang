@@ -3,12 +3,14 @@
  * Date Created: May 2nd, 2025
  * Last Modified: May 2nd, 2025
  */
+
 %code requires {
 #include "var.h"
 #include <stdlib.h>
 }
 
 %locations
+%defines
 
 %{
 #include <stdio.h>
@@ -22,29 +24,11 @@ extern FILE* yyin;
 /* prototypes */
 void yyerror(const char* s);
 
-/* macros */
-#define N(T, LOC, ...)  \
-    ({ Node* _tmp = makeNode((T), __VA_ARGS__); set_loc(_tmp, (LOC)); _tmp; })
-
 
 /* globals */
 /* root of ast (abstract syntax tree) */
 Node* root;
 %}
-
-%code provides {
-#include <stdarg.h>
-#include "ast.h"
-
-static Node* set_loc(Node* n, YYLTYPE loc)
-{
-        n->lineno  = loc.first_line;
-        n->column  = loc.first_column;
-        return n;
-}
-
-
-}
 
 %union {
         int ival;
@@ -55,10 +39,10 @@ static Node* set_loc(Node* n, YYLTYPE loc)
         enum VarType vartype;
 }
 
-%nonassoc RETVOID
+%nonassoc RET
 %right ARROW
-%left LBRACKET RBRACKET
-%right ASSIGN
+%left '[' ']'
+%right '='
 
 %left OR
 %left AND
@@ -74,30 +58,30 @@ static Node* set_loc(Node* n, YYLTYPE loc)
 %token <ival> NUM
 %token <bval> TRUE FALSE
 %token <fval> FLOAT
-%token <vartype> TYPEKEYWORD
+%token <vartype> TYPE
 %token <ident> IDENT
 %token <ident> STRING
 %token <ival> CHAR
 
-%token ASSIGN
-%token SEMICOLON
-%token LPAREN RPAREN
-%token LBRACE RBRACE
-%token LBRACKET RBRACKET
+%token '='
+%token ';'
+%token '(' ')'
+%token '{' '}'
+%token '[' ']'
 %token ADD SUB MUL DIV
 %token LT GT LE GE EQ NE
 %token NOT
 %token AND OR
 %token IF ELSE FOR WHILE
 %token BREAK CONTINUE
-%token DEF RETURN ARROW COMMA
+%token DEF RETURN ARROW ','
 %token PRINT
 %token PRINTLN
 
 /* non terminals */
 %type <node> puer top_code code block stmt expr
 %type <node> control_stmt opt_stmt opt_expr stmt_end top_stmt_end
-%type <node> array_items dims opt_initializer
+%type <node> array_items dims opt_init
 %type <node> function_def param_list arg_list
 %type <node> varassign
 %type <vartype> opt_return
@@ -109,8 +93,8 @@ puer
     ;
 
 top_code
-    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
-    | top_code top_stmt_end      { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
+    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
+    | top_code top_stmt_end      { $$ = node(NODE_SEQ, @$, 2, $1, $2); }
     ;
 
 top_stmt_end
@@ -119,223 +103,141 @@ top_stmt_end
     ;
 
 block
-    : LBRACE code RBRACE         { $$ = $2; }
+    : '{' code '}'               { $$ = $2; }
     ;
 
 code
-    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
-    | code stmt_end              { $$ = N(NODE_SEQ, @$, 2, $1, $2); }
+    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
+    | code stmt_end              { $$ = node(NODE_SEQ, @$, 2, $1, $2); }
     ;
 
 stmt_end
-   : stmt SEMICOLON              { $$ = $1; }
+   : stmt ';'                    { $$ = $1; }
    | control_stmt                { $$ = $1; }
    | block                       { $$ = $1; }
    ;
 
-function_def
-    : DEF IDENT LPAREN param_list RPAREN opt_return block
-    {
-        /* children = params + the body of the func */
-        Node* fn = N(NODE_FUNCDEF, @$, 2, $4, $7);
-        fn->varname = $2; /* func name */
-        fn->vartype = $6; /* return type */
-        $$ = fn;
-    }
+stmt
+    : PRINT '(' arg_list ')'     { $$ = node(NODE_PRINT, @$, 1, $3); }
+    | PRINTLN '(' arg_list ')'   { $$ = node(NODE_PRINTLN, @$, 1, $3); }
+
+    | TYPE dims IDENT opt_init   { $$ = node(NODE_ARRAYDECL, @$, 2, $2, $4); setvar($$, $1, $3); }
+    | TYPE IDENT                 { $$ = node(NODE_VARDECL, @$, 0); setvar($$, $1, $2); }
+    | TYPE IDENT '=' expr        { $$ = node(NODE_VARDECL, @$, 1, $4); setvar($$, $1, $2); }
+    | BREAK                      { $$ = node(NODE_BREAK, @$, 0); }
+    | CONTINUE                   { $$ = node(NODE_CONTINUE, @$, 0); }
+    | RETURN expr                { $$ = node(NODE_RETURN, @$, 1, $2); }
+    | RETURN                     { $$ = node(NODE_RETURN, @$, 0); settype($$, TYPE_VOID); }
+    | expr                       { $$ = $1; }
     ;
 
+expr
+    : NUM                        { $$ = node(NODE_NUM, @1, 0); $$->ival = $1; }
+    | TRUE                       { $$ = node(NODE_BOOL, @1, 0); $$->ival = $1; }
+    | FALSE                      { $$ = node(NODE_BOOL, @1, 0); $$->ival = $1; }
+    | FLOAT                      { $$ = node(NODE_FLOAT, @1, 0); $$->fval = $1; }
+    | IDENT                      { $$ = node(NODE_VAR, @1, 0); setname($$, $1); }
+    | STRING                     { $$ = node(NODE_STRING, @1, 0); setname($$, $1); }
+    | CHAR                       { $$ = node(NODE_CHAR, @1, 0); $$->ival = $1; }
+    | expr LT expr               { $$ = node(NODE_LT, @$, 2, $1, $3); }
+    | expr GT expr               { $$ = node(NODE_GT, @$, 2, $1, $3); }
+    | expr LE expr               { $$ = node(NODE_LE, @$, 2, $1, $3); }
+    | expr GE expr               { $$ = node(NODE_GE, @$, 2, $1, $3); }
+    | expr EQ expr               { $$ = node(NODE_EQ, @$, 2, $1, $3); }
+    | expr NE expr               { $$ = node(NODE_NE, @$, 2, $1, $3); }
+    | expr ADD expr              { $$ = node(NODE_ADD, @$, 2, $1, $3); }
+    | expr SUB expr              { $$ = node(NODE_SUB, @$, 2, $1, $3); }
+    | expr MUL expr              { $$ = node(NODE_MUL, @$, 2, $1, $3); }
+    | expr DIV expr              { $$ = node(NODE_DIV, @$, 2, $1, $3); }
+    | expr MOD expr              { $$ = node(NODE_MOD, @$, 2, $1, $3); }
+    | SUB expr %prec UMINUS      { $$ = node_uminus($2, @$); }
+    | '(' expr ')'               { $$ = $2; }
+    | IDENT '(' arg_list ')'     { $$ = node(NODE_FUNCCALL, @$, 1, $3); setname($$, $1); }
+    | NOT expr                   { $$ = node(NODE_NOT, @$, 1, $2); }
+    | expr AND expr              { $$ = node(NODE_AND, @$, 2, $1, $3); }
+    | expr OR expr               { $$ = node(NODE_OR, @$, 2, $1, $3); }
+    | expr '[' expr ']'          { $$ = node(NODE_IDX, @$, 2, $1, $3); }
+    | '[' ']'                    { $$ = node(NODE_ARRAYLIT, @$, 0); }
+    | '[' array_items ']'        { $$ = $2; }
+    | varassign                  { $$ = $1; }
+    ;
+
+function_def
+    : DEF IDENT '(' param_list ')' opt_return block
+                                 {
+                                   $$ = node(NODE_FUNCDEF, @$, 2, $4, $7); setvar($$, $6, $2);
+                                 };
+
 param_list
-    : /* empty */                { $$ = N(NODE_SEQ, @$, 0); }
-    | TYPEKEYWORD IDENT
-    {
-        Node* d = N(NODE_VARDECL, @$, 0);
-        d->varname = $2;
-        d->vartype = $1;
-        $$ = N(NODE_SEQ, @$, 1, d);
-    }
-    | param_list COMMA TYPEKEYWORD IDENT
-    {
-        /* TODO: probably put this in a function */
-        Node* d = N(NODE_VARDECL, @$, 0);
-        int old;
-        d->varname = $4;
-        d->vartype = $3;
-        old = $1->n_children;
-        $1->n_children = old + 1;
-        $1->children = realloc($1->children, sizeof(Node*) * (old + 1));
-        $1->children[old] = d;
-        $$ = $1;
-    }
+    : /* empty */                { $$ = node(NODE_SEQ, @$, 0); }
+    | TYPE IDENT                 { $$ = node_param($1, $2, @$); }
+    | param_list ',' TYPE IDENT  { $$ = node_param_append($1, $3, $4, @$); }
     ;
 
 opt_return
     : /* empty */                { $$ = TYPE_VOID; }
-    | ARROW TYPEKEYWORD %prec RETVOID { $$ = $2; }
-    | ARROW TYPEKEYWORD dims %prec RETVOID
-    {
-        free_ast($3);
-        $$ = TYPE_ARRAY;
-    }
+    | ARROW TYPE %prec RET       { $$ = $2; }
+    | ARROW TYPE dims %prec RET  { $$ = TYPE_ARRAY; free_ast($3); }
     ;
 
-/* function args when calling function */
 arg_list
-    : /*empty */                 { $$ = N(NODE_SEQ, @$, 0); }
-    | expr                       { $$ = N(NODE_SEQ, @$, 1, $1); }
-    | arg_list COMMA expr
-    {
-        int old = $1->n_children;
-        $1->n_children = old + 1;
-        $1->children = realloc($1->children, sizeof(Node*) * (old + 1));
-        $1->children[old] = $3;
-        $$ = $1;
-    }
+    : /*empty */                 { $$ = node(NODE_SEQ, @$, 0); }
+    | expr                       { $$ = node(NODE_SEQ, @$, 1, $1); }
+    | arg_list ',' expr          { $$ = node_append($1, $3); }
     ;
 
 control_stmt
-    : IF LPAREN expr RPAREN stmt_end %prec IFX
+    : IF '(' expr ')' stmt_end %prec IFX
                                  {
-                                   $$ = N(NODE_IF, @$, 2, $3, $5);
+                                   $$ = node(NODE_IF, @$, 2, $3, $5);
                                  }
-    | IF LPAREN expr RPAREN stmt_end ELSE stmt_end
+    | IF '(' expr ')' stmt_end ELSE stmt_end
                                  {
-                                   $$ = N(NODE_IFELSE, @$, 3, $3, $5, $7);
+                                   $$ = node(NODE_IFELSE, @$, 3, $3, $5, $7);
                                  }
-    | FOR LPAREN opt_stmt SEMICOLON opt_expr SEMICOLON opt_stmt RPAREN stmt_end
+    | FOR '(' opt_stmt ';' opt_expr ';' opt_stmt ')' stmt_end
                                  {
-                                   $$ = N(NODE_FOR, @$, 4, $3, $5, $7, $9);
+                                   $$ = node(NODE_FOR, @$, 4, $3, $5, $7, $9);
                                  }
-    | WHILE LPAREN expr RPAREN stmt_end
+    | WHILE '(' expr ')' stmt_end
                                  {
-                                   $$ = N(NODE_WHILE, @$, 2, $3, $5);
+                                   $$ = node(NODE_WHILE, @$, 2, $3, $5);
                                  }
     ;
 
 /* optional statements. ex: for things like for(;;)*/
 opt_stmt
-    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
+    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
     | stmt                       { $$ = $1; }
     ;
 
 /* optional conditions */
 opt_expr
-    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
+    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
     | expr                       { $$ = $1; }
     ;
 
-opt_initializer
-    : /* empty */                { $$ = N(NODE_NOP, @$, 0); }
-    | ASSIGN expr                { $$ = $2; }
+opt_init
+    : /* empty */                { $$ = node(NODE_NOP, @$, 0); }
+    | '=' expr                   { $$ = $2; }
     ;
 
 dims
-    : LBRACKET RBRACKET          { $$ = N(NODE_SEQ, @$, 0); }
-    | dims LBRACKET RBRACKET
-    {
-        Node* seq = $1;
-        seq->n_children++;
-        seq->children = realloc(seq->children, sizeof(Node*) * seq->n_children);
-        seq->children[seq->n_children-1] = N(NODE_NOP, @$, 0);
-        $$ = seq;
-    }
-    | LBRACKET expr RBRACKET
-    {
-        $$ = N(NODE_SEQ, @$, 1, $2);
-    }
-    | dims LBRACKET expr RBRACKET
-    {
-        Node* seq = $1;
-        seq->n_children++;
-        seq->children = realloc(seq->children, sizeof(Node*) * seq->n_children);
-        seq->children[seq->n_children-1] = $3;
-        $$ = seq;
-    }
-    ;
-
-stmt
-    : PRINT LPAREN arg_list RPAREN   { $$ = N(NODE_PRINT, @$, 1, $3); }
-    | PRINTLN LPAREN arg_list RPAREN { $$ = N(NODE_PRINTLN, @$, 1, $3); }
-
-    /* variable declarations & assignments */
-    | TYPEKEYWORD dims IDENT opt_initializer
-    {
-        /* child 0 = SEQ of NUMS
-         * child 1 = initializer */
-        Node* n = N(NODE_ARRAYDECL, @$, 2, $2, $4);
-        n->vartype = $1;
-        n->varname = $3;
-        $$ = n;
-    }
-    | TYPEKEYWORD IDENT          { $$ = N(NODE_VARDECL, @$, 0); $$->varname = $2; $$->vartype = $1; }
-    | TYPEKEYWORD IDENT ASSIGN expr { $$ = N(NODE_VARDECL, @$, 1, $4); $$->varname = $2; $$->vartype = $1; }
-    | BREAK                      { $$ = N(NODE_BREAK, @$, 0); }
-    | CONTINUE                   { $$ = N(NODE_CONTINUE, @$, 0); }
-    | RETURN expr                { $$ = N(NODE_RETURN, @$, 1, $2); }
-    | RETURN                     { $$ = N(NODE_RETURN, @$, 0); $$->vartype = TYPE_VOID; }
-    | expr                       { $$ = $1; }
+    : '[' ']'                    { $$ = node(NODE_SEQ, @$, 0); }
+    | dims '[' ']'               { $$ = node_append_type($1, NODE_NOP, @$); }
+    | '[' expr ']'               { $$ = node(NODE_SEQ, @$, 1, $2); }
+    | dims '[' expr ']'          { $$ = node_append($1, $3); }
     ;
 
 varassign
-    : IDENT ASSIGN expr %prec ASSIGN
-    {
-        $$ = N(NODE_ASSIGN, @$, 1, $3); $$->varname = $1;
-    }
-    | expr LBRACKET expr RBRACKET ASSIGN expr %prec ASSIGN
-    {
-         $$ = N(NODE_IDXASSIGN, @$, 3, $1, $3, $6);
-    }
+    : IDENT '=' expr %prec '='   { $$ = node(NODE_ASSIGN, @$, 1, $3); setname($$, $1); }
+    | expr '[' expr ']' '=' expr %prec '='
+                                 { $$ = node(NODE_IDXASSIGN, @$, 3, $1, $3, $6); }
     ;
 
 array_items
-    : expr                       { $$ = N(NODE_ARRAYLIT, @$, 1, $1); }
-    | array_items COMMA expr
-    {
-        Node* a = $1;
-        int old = a->n_children;
-        a->n_children = old + 1;
-        a->children = realloc(a->children, sizeof(Node*) * a->n_children);
-        a->children[old] = $3;
-        $$ = a;
-    }
-    ;
-
-expr
-    : NUM                        { $$ = N(NODE_NUM, @1, 0); $$->ival = $1; }
-    | TRUE                       { $$ = N(NODE_BOOL, @1, 0); $$->ival = $1; }
-    | FALSE                      { $$ = N(NODE_BOOL, @1, 0); $$->ival = $1; }
-    | FLOAT                      { $$ = N(NODE_FLOAT, @1, 0); $$->fval = $1; }
-    | IDENT                      { $$ = N(NODE_VAR, @1, 0); $$->varname = $1; }
-    | STRING                     { $$ = N(NODE_STRING, @1, 0); $$->varname = $1; }
-    | CHAR                       { $$ = N(NODE_CHAR, @1, 0); $$->ival = $1; }
-    | expr LT expr               { $$ = N(NODE_LT, @$, 2, $1, $3); }
-    | expr GT expr               { $$ = N(NODE_GT, @$, 2, $1, $3); }
-    | expr LE expr               { $$ = N(NODE_LE, @$, 2, $1, $3); }
-    | expr GE expr               { $$ = N(NODE_GE, @$, 2, $1, $3); }
-    | expr EQ expr               { $$ = N(NODE_EQ, @$, 2, $1, $3); }
-    | expr NE expr               { $$ = N(NODE_NE, @$, 2, $1, $3); }
-    | expr ADD expr              { $$ = N(NODE_ADD, @$, 2, $1, $3); }
-    | expr SUB expr              { $$ = N(NODE_SUB, @$, 2, $1, $3); }
-    | expr MUL expr              { $$ = N(NODE_MUL, @$, 2, $1, $3); }
-    | expr DIV expr              { $$ = N(NODE_DIV, @$, 2, $1, $3); }
-    | expr MOD expr              { $$ = N(NODE_MOD, @$, 2, $1, $3); }
-    | SUB expr %prec UMINUS      {
-                                   Node* zero = N(NODE_NUM, @$, 0);
-                                   zero->ival = 0;
-                                   $$ = N(NODE_SUB, @$, 2, zero, $2);
-                                 }
-    | LPAREN expr RPAREN         { $$ = $2; }
-    | IDENT LPAREN arg_list RPAREN
-    {
-        $$ = N(NODE_FUNCCALL, @$, 1, $3);
-        $$->varname = $1;
-    }
-    | NOT expr                   { $$ = N(NODE_NOT, @$, 1, $2); }
-    | expr AND expr              { $$ = N(NODE_AND, @$, 2, $1, $3); }
-    | expr OR expr               { $$ = N(NODE_OR, @$, 2, $1, $3); }
-    | expr LBRACKET expr RBRACKET { $$ = N(NODE_IDX, @$, 2, $1, $3); }
-    | LBRACKET RBRACKET          { $$ = N(NODE_ARRAYLIT, @$, 0); }
-    | LBRACKET array_items RBRACKET { $$ = $2; }
-    | varassign                  { $$ = $1; }
+    : expr                       { $$ = node(NODE_ARRAYLIT, @$, 1, $1); }
+    | array_items ',' expr       { node_append($1, $3); }
     ;
 %%
 

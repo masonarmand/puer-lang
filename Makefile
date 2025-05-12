@@ -6,7 +6,9 @@ WARNINGS = -Wall -Wextra -Wpedantic -Werror \
 
 CC = gcc
 # CFLAGS = -std=c89 -D_POSIX_C_SOURCE=200809L -Iinclude $(WARNINGS)
-CFLAGS = -g -std=c89 -D_POSIX_C_SOURCE=200809L -Iinclude
+INCDIRS = include src
+CPPFLAGS = $(addprefix -I,$(INCDIRS))
+CFLAGS = -g -std=c89 -D_POSIX_C_SOURCE=200809L
 LDFLAGS = -lfl
 EXEC = puer
 
@@ -22,7 +24,7 @@ build: $(EXEC)
 $(EXEC): $(SRC_FILES)
 	bison -v -d -o $(SRC)/parser.tab.c $(SRC)/parser.y
 	flex -o $(SRC)/lexer.yy.c $(SRC)/lexer.l
-	$(CC) $(CFLAGS) $(SRC_FILES) $(LDFLAGS) -o $(EXEC)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(SRC_FILES) $(LDFLAGS) -o $(EXEC)
 	rm -f $(SRC)/parser.tab.* $(SRC)/lexer.yy.c
 
 run:

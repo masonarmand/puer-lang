@@ -46,7 +46,7 @@ static const char* node_type_to_str(NodeType t)
         return "UNKNOWN_NODE";
 }
 
-Node* makeNode(NodeType type, int n_children, ...)
+Node* node(NodeType type, YYLTYPE loc, int n_children, ...)
 {
         Node* n = malloc(sizeof(Node));
         unsigned int i;
@@ -57,6 +57,8 @@ Node* makeNode(NodeType type, int n_children, ...)
         n->vartype = TYPE_VOID;
         n->varname = NULL;
         n->ndims = 0;
+        n->lineno = loc.first_line;
+        n->column = loc.first_column;
 
         va_list args;
         va_start(args, n_children);
@@ -65,6 +67,62 @@ Node* makeNode(NodeType type, int n_children, ...)
         va_end(args);
 
         return n;
+}
+
+void setvar(Node* node, VarType type, char* varname)
+{
+        node->vartype = type;
+        node->varname = varname;
+}
+
+void setname(Node* node, char* varname)
+{
+        node->varname = varname;
+}
+
+void settype(Node* node, VarType type)
+{
+        node->vartype = type;
+}
+
+Node* node_uminus(Node* n, YYLTYPE loc)
+{
+        Node* zero = node(NODE_NUM, loc, 0);
+        zero->ival = 0;
+        return node(NODE_SUB, loc, 2, zero, n);
+}
+
+Node* node_param(VarType type, char* varname, YYLTYPE loc)
+{
+        Node* d = node(NODE_VARDECL, loc, 0);
+        d->varname = varname;
+        d->vartype = type;
+        return node(NODE_SEQ, loc, 1, d);
+}
+
+Node* node_param_append(Node* list, VarType type, char* varname, YYLTYPE loc)
+{
+        Node* param = node(NODE_VARDECL, loc, 0);
+        param->varname = varname;
+        param->vartype = type;
+        return node_append(list, param);
+}
+
+Node* node_append(Node* list, Node* child)
+{
+        int old = list->n_children;
+
+        list->n_children = old + 1;
+        list->children = realloc(list->children, sizeof(Node*) * list->n_children);
+        list->children[old] = child;
+
+        return list;
+}
+
+Node* node_append_type(Node* list, NodeType type, YYLTYPE loc)
+{
+        Node* n = node(type, loc, 0);
+        node_append(list, n);
 }
 
 void print_ast(Node* node, int depth)
