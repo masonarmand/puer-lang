@@ -63,7 +63,7 @@ int yycolumn = 1;
 '\\\''   { yylval.ival = '\''; return CHAR; }
 
 "="                      return '=';
-"\\+="                   return ADD_ASSIGN;
+"+="                   return ADD_ASSIGN;
 "-="                     return SUB_ASSIGN;
 "*="                     return MUL_ASSIGN;
 "%="                     return MOD_ASSIGN;

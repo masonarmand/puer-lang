@@ -1,21 +1,39 @@
-def is_even(int a) -> bool
-{
-        return a % 2 == 0;
-}
+// Arithmetic
+println( 1 + 2 );   // 3
+println( 5 - 3 );   // 2
+println( 4 * 3 );   // 12
+println( 8 / 2 );   // 4
+println( 7 % 3 );   // 1
 
-def is_odd(int a) -> bool
-{
-        return !(is_even(a));
-}
+// Comparison
+println( 1 <  2 );  // true
+println( 2 >  3 );  // false
+println( 2 <= 2 );  // true
+println( 3 >= 4 );  // false
+println( 4 == 4 );  // true
+println( 5 != 5 );  // false
 
-println(is_even(5)); // 0
-println(is_odd(5));  // 1
-println(is_even(4) && is_odd(5)); // 1
-println(is_even(4) && is_odd(4)); // 0
+int a = 20;
+int b = 5;
 
-println(is_even(4) || is_odd(4)); // 1
-println(is_even(5) || is_odd(5)); // 1
+b += a;
+println(b); // 25
 
-int[] arr = [1, 2, 3, 4, 5];
-arr[0] = arr[0] + 1;
-println(arr[0]);
+// Logical
+println( true  && false );  // false
+println( true  || false );  // true
+println( false && (10/2 == 5) ); // short-circuit: false
+
+// Mixed-precedence check
+println( 1 + 2 * 3 );  // 7
+println( (1 + 2) * 3 );// 9
+
+// String concatenation
+println( "foo" + "bar" );      // "foobar"
+println( ""    + "baz" );      // "baz"
+
+// Edge cases
+println( 0 == false );         // true  (0 is falsey)
+println( 1 && (2 > 3) );       // false
+println( (2 < 3) || 0 );       // true
+

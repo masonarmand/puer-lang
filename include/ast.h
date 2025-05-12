@@ -21,6 +21,8 @@ typedef enum {
         OP_GE,
         OP_EQ,
         OP_NE,
+        OP_AND,
+        OP_OR,
         NUM_OPS
 } BinOp;
 
@@ -32,14 +34,17 @@ typedef enum {
         NODE_STRING,
         NODE_CHAR,
 
-        NODE_ADD,
-        NODE_SUB,
-        NODE_MUL,
-        NODE_DIV,
-        NODE_MOD,
-        NODE_NOT,
         NODE_AND,
         NODE_OR,
+
+        NODE_PREINC,
+        NODE_PREDEC,
+        NODE_POSTINC,
+        NODE_POSTDEC,
+
+        NODE_BINOP,
+        NODE_COMPOUND,
+        NODE_NOT,
         NODE_PRINT,
         NODE_PRINTLN,
         NODE_SEQ,
@@ -101,6 +106,8 @@ typedef struct Node {
 
 /* ast.c */
 Node* node(NodeType type, YYLTYPE loc, int n_children, ...);
+Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);
+Node* node_compound(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);
 Node* node_uminus(Node* n, YYLTYPE loc);
 Node* node_param(VarType type, char* varname, YYLTYPE loc);
 Node* node_param_append(Node* list, VarType type, char* varname, YYLTYPE loc);

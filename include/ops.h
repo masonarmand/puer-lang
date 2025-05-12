@@ -12,6 +12,4 @@ typedef struct {
 
 extern TypeOps type_ops[];
 
-BinOp get_binop(NodeType type);
-
 #endif

@@ -12,6 +12,7 @@ ArrayList* arraylist_new(VarType type, int initial_capacity);
 ArrayList* arraylist_clone(const ArrayList* src);
 void arraylist_grow(ArrayList* a);
 void arraylist_push(ArrayList* a, Var v);
+void check_arr_bounds(ArrayList* a, int index);
 Var build_zero_array(VarType base, int* dims, int ndims);
 
 #endif

@@ -40,7 +40,7 @@ void eval_funcdef(Node* node);
 void eval_funccall_stmt(Node* node);
 void eval_idxassign_stmt(Node* node);
 void eval_arraydecl(Node* node);
-void eval_compount_stmt(Node* node);
+void eval_compound_stmt(Node* node);
 
 Var eval_funccall(Node* node);
 Var eval_assign_expr(Node* node);
@@ -71,6 +71,7 @@ void init_handlers(void)
         handlers[NODE_FUNCCALL]  = eval_funccall_stmt;
         handlers[NODE_IDXASSIGN] = eval_idxassign_stmt;
         handlers[NODE_ARRAYDECL] = eval_arraydecl;
+        handlers[NODE_COMPOUND]  = eval_compound_stmt;
 }
 
 void eval(Node* node)
@@ -582,7 +583,7 @@ Var eval_binop(Node* node)
         return do_binop(node, op, a, b);
 }
 
-void eval_compount_stmt(Node* node)
+void eval_compound_stmt(Node* node)
 {
         (void) eval_compound_expr(node);
 }
