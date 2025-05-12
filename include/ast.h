@@ -7,6 +7,7 @@
 #define AST_H
 
 #include "var.h"
+#include "ops.h"
 #include <stdarg.h>
 
 typedef enum {
@@ -65,6 +66,7 @@ typedef enum {
 
 typedef struct Node {
         NodeType type;
+        BinOp op;
         struct Node** children;
         int n_children;
 
