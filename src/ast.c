@@ -75,6 +75,14 @@ Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs)
         binop->op = op;
 }
 
+Node* node_incdec(BinOp op, YYLTYPE loc, Node* child, int is_prefix)
+{
+        Node* incdec = node(NODE_INCDEC, loc, 1, child);
+        incdec->op = op;
+        incdec->ival = is_prefix;
+        return incdec;
+}
+
 Node* node_compound(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs)
 {
         Node* compound = node(NODE_COMPOUND, loc, 2, lhs, rhs);

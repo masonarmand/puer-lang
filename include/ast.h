@@ -37,11 +37,7 @@ typedef enum {
         NODE_AND,
         NODE_OR,
 
-        NODE_PREINC,
-        NODE_PREDEC,
-        NODE_POSTINC,
-        NODE_POSTDEC,
-
+        NODE_INCDEC,
         NODE_BINOP,
         NODE_COMPOUND,
         NODE_NOT,
@@ -107,6 +103,7 @@ typedef struct Node {
 /* ast.c */
 Node* node(NodeType type, YYLTYPE loc, int n_children, ...);
 Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);
+Node* node_incdec(BinOp op, YYLTYPE loc, Node* child, int is_prefix);
 Node* node_compound(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);
 Node* node_uminus(Node* n, YYLTYPE loc);
 Node* node_param(VarType type, char* varname, YYLTYPE loc);

@@ -157,13 +157,13 @@ expr
     | expr AND expr                        { $$ = node(NODE_AND, @$, 2, $1, $3); }
     | expr OR expr                         { $$ = node(NODE_OR, @$, 2, $1, $3); }
 
-    | expr INC               %prec POSTFIX { $$ = node(NODE_POSTINC, @$, 1, $1); }
-    | expr DEC               %prec POSTFIX { $$ = node(NODE_POSTDEC, @$, 1, $1); }
+    | expr INC               %prec POSTFIX { $$ = node_incdec(OP_ADD, @$, $1, 0); }
+    | expr DEC               %prec POSTFIX { $$ = node_incdec(OP_SUB, @$, $1, 0); }
     | IDENT '(' arg_list ')' %prec POSTFIX { $$ = node(NODE_FUNCCALL, @$, 1, $3); setname($$, $1); }
     | expr '[' expr ']'      %prec POSTFIX { $$ = node(NODE_IDX, @$, 2, $1, $3); }
 
-    | INC expr                             { $$ = node(NODE_PREINC, @$, 1, $2); }
-    | DEC expr                             { $$ = node(NODE_PREDEC, @$, 1, $2); }
+    | INC expr                             { $$ = node_incdec(OP_ADD, @$, $2, 1); }
+    | DEC expr                             { $$ = node_incdec(OP_SUB, @$, $2, 1); }
     | NOT expr                             { $$ = node(NODE_NOT, @$, 1, $2); }
     | SUB expr               %prec UMINUS  { $$ = node_uminus($2, @$); }
 

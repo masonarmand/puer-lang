@@ -41,17 +41,21 @@ void eval_funccall_stmt(Node* node);
 void eval_idxassign_stmt(Node* node);
 void eval_arraydecl(Node* node);
 void eval_compound_stmt(Node* node);
+void eval_incdec_stmt(Node* node);
 
 Var eval_funccall(Node* node);
 Var eval_assign_expr(Node* node);
 Var eval_idxassign_expr(Node* node);
 Var eval_compound_expr(Node* node);
+Var eval_incdec_expr(Node* node);
 
 /* helpers */
 void print_var(Node* node, const Var* v);
 int var_to_idx(Node* node, Var v);
 Var index_store(Node* node, Var container, int idx, Var val);
 Var index_load(Node* node, Var container, int idx);
+Var load_lvalue(Node* L);
+void assign_lvalue(Node* L, Var val);
 
 static StmtHandler handlers[NODE_LASTNODE];
 
@@ -72,6 +76,7 @@ void init_handlers(void)
         handlers[NODE_IDXASSIGN] = eval_idxassign_stmt;
         handlers[NODE_ARRAYDECL] = eval_arraydecl;
         handlers[NODE_COMPOUND]  = eval_compound_stmt;
+        handlers[NODE_INCDEC]    = eval_incdec_stmt;
 }
 
 void eval(Node* node)
@@ -219,6 +224,10 @@ void eval_vardecl(Node* node)
 {
         Var v;
         v.type = node->vartype;
+        Var* get;
+
+        if (get = env_get(node->varname))
+                die(node, "'%s' has already been declared as type: '%d'", node->varname, get->type);
 
         /* if var is initialized with a value */
         if (node->n_children > 0) {
@@ -591,47 +600,23 @@ void eval_compound_stmt(Node* node)
 Var eval_compound_expr(Node* node)
 {
         Node* L = node->children[0];
-        Node* R = node->children[1];
-        Var rhs;
-        Var result;
-        BinOp op = node->op;
-        Var old;
-        Var* v;
-        Var container;
-        int idx;
-
-        switch (L->type) {
-        case NODE_VAR:
-                v = env_get(L->varname);
-                if (!v)
-                        die(node, "undeclared variable '%s'", L->varname);
-                old = *v;
-                break;
-        case NODE_IDX:
-                Var idxv = eval_expr(L->children[1]);
-
-                container = eval_expr(L->children[0]);
-                idx = var_to_idx(node, idxv);
-                old = index_load(node, container, idxv.data.i);
-                break;
-        default:
-                die(node, "invalid LHS in compound assign");
-                break;
-        }
-
-        rhs = eval_expr(R);
-        result = do_binop(node, op, old, rhs);
+        Var old = load_lvalue(L);
+        Var rhs = eval_expr(node->children[1]);
+        Var result = do_binop(node, node->op, old, rhs);
 
         if (L->type == NODE_VAR) {
+                Var* v = env_get(L->varname);
                 result = implicit_convert(result, v->type);
-                env_set(L->varname, result);
         }
         else {
-                int is_str = container.type == TYPE_STRING;
-                VarType type = (is_str ? TYPE_INT : container.data.a->type);
+                Var container = eval_expr(L->children[0]);
+                int is_str = (container.type == TYPE_STRING);
+                VarType type = (is_str) ? TYPE_INT : container.data.a->type;
                 result = implicit_convert(result, type);
-                index_store(node, container, idx, result);
         }
+
+        assign_lvalue(L, result);
+        return result;
 }
 
 Var eval_idx(Node* node)
@@ -640,6 +625,65 @@ Var eval_idx(Node* node)
         Var v = eval_expr(node->children[1]);
         int idx = var_to_idx(node, v);
         return index_load(node, container, idx);
+}
+
+Var load_lvalue(Node* L)
+{
+        switch (L->type) {
+        case NODE_VAR:
+                Var* v = env_get(L->varname);
+                if (!v)
+                        die(L, "undefined variable '%s'", L->varname);
+                return *v;
+        case NODE_IDX:
+                Var container = eval_expr(L->children[0]);
+                Var idxv = eval_expr(L->children[1]);
+                int idx = var_to_idx(L, idxv);
+                return index_load(L, container, idx);
+        default:
+                die(L, "Left hand side is not assignable");
+        }
+}
+
+void assign_lvalue(Node* L, Var val)
+{
+        switch (L->type) {
+        case NODE_VAR:
+                Var* v = env_get(L->varname);
+                if (!v)
+                        die(L, "undefined variable '%s'", L->varname);
+                *v = val;
+                return;
+        case NODE_IDX:
+                Var container = eval_expr(L->children[0]);
+                Var idxv = eval_expr(L->children[1]);
+                int idx = var_to_idx(L, idxv);
+                index_store(L, container, idx, val);
+                return;
+        default:
+                die(L, "Left hand side is not assignable");
+        }
+}
+
+Var eval_incdec_expr(Node* node)
+{
+        Node* L = node->children[0];
+        int is_prefix = node->ival;
+        Var old = load_lvalue(L);
+        Var one;
+        Var next;
+
+        set_int(&one, 1);
+        next = do_binop(node, node->op, old, one);
+        assign_lvalue(L, next);
+
+        return (is_prefix) ? next : old;
+
+}
+
+void eval_incdec_stmt(Node* node)
+{
+        (void) eval_incdec_expr(node);
 }
 
 Var eval_expr(Node* node)
@@ -716,6 +760,8 @@ Var eval_expr(Node* node)
                 return eval_binop(node);
         case NODE_COMPOUND:
                 return eval_compound_expr(node);
+        case NODE_INCDEC:
+                return eval_incdec_expr(node);
         default:
                 die(node, "unhandled expression type: %s", node->type);
         }

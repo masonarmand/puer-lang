@@ -1,0 +1,36 @@
+int a = 5;
+
+println("i++ in for loop");
+for (int i = 0; i < a; i++)
+        println(i);
+
+println();
+println("i-- in for loop");
+for (int i = a; i > 0; i--)
+        println(i);
+
+println("++i in for loop");
+for (int i = 0; i < a; ++i)
+        println(i);
+
+println();
+println("i-- in for loop");
+for (int i = a; i > 0; --i)
+        println(i);
+
+
+a = 0;
+int res = ++a;
+println("++a expr result", res, "a:", a);
+
+a = 0;
+res = a++;
+println("a++ expr result", res, "a:", a);
+
+a = 0;
+res = --a;
+println("--a expr result", res, "a:", a);
+
+a = 0;
+res = a--;
+println("a-- expr result", res, "a:", a);
