@@ -18,9 +18,9 @@
 - [ ] fix grammar and handling of n-dimensional arrays so that functions can return
 multi dimensional arrays.
 - [X] Make assignment (`=`) work as an expression
-- [ ] shorthand expressions
-    - [ ] `++`, `--`
-    - [ ] `+=`, `-=`, `/=`, `*=`, `%=`
+- [X] shorthand expressions
+    - [X] `++`, `--`
+    - [X] `+=`, `-=`, `/=`, `*=`, `%=`
 - [ ] some way to convert between data types e.g, `str` -> `int`
 - [X] functions with return types and args
 - [ ] structs/records
