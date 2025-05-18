@@ -60,7 +60,6 @@ void recdef_clear(void)
 
 void recdef_free(RecDef* rd)
 {
-        unsigned int i;
         FieldIndex* fi;
         FieldIndex* tmp;
 

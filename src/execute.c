@@ -144,15 +144,16 @@ CtrlSignal eval_ifelse_ctrl(Node* node)
 
 CtrlSignal eval_block(Node* node)
 {
+        CtrlSignal sig;
         env_push();
-        CtrlSignal sig = eval_with_ctrl(node);
+        sig = eval_with_ctrl(node);
         env_pop();
         return sig;
 }
 
 void eval_seq(Node* node)
 {
-        int i;
+        unsigned int i;
         for (i = 0; i < node->n_children; i++) {
                 eval(node->children[i]);
                 /*gc_collect_step();*/
@@ -162,7 +163,11 @@ void eval_seq(Node* node)
 
 void print_var(Node* node, const Var* v)
 {
-        int i;
+        unsigned int i;
+        unsigned int n;
+        ArrayList* a;
+        RecInst* r;
+
         switch (v->type) {
         case TYPE_INT:
                 printf("%d", v->data.i);
@@ -183,7 +188,7 @@ void print_var(Node* node, const Var* v)
                 printf("%s", v->data.s->data);
                 break;
         case TYPE_ARRAY:
-                ArrayList* a = v->data.a;
+                a = v->data.a;
                 printf("[");
                 for (i = 0; i < a->size; i++) {
                         int is_str = (a->items[i].type == TYPE_STRING);
@@ -198,8 +203,8 @@ void print_var(Node* node, const Var* v)
                 printf("]");
                 break;
         case TYPE_REC:
-                RecInst* r = v->data.r;
-                int n = r->def->n_fields;
+                r = v->data.r;
+                n = r->def->n_fields;
 
                 printf("{");
                 for (i = 0; i < n; i++) {
@@ -246,10 +251,10 @@ void eval_println(Node* node)
 void eval_vardecl(Node* node)
 {
         Var v;
-        v.type = node->vartype;
         Var* get;
+        v.type = node->vartype;
 
-        if (get = env_get(node->varname))
+        if ((get = env_get(node->varname)))
                 die(node, "'%s' has already been declared as type: '%d'", node->varname, get->type);
 
         if (node->vartype == TYPE_REC) {
@@ -350,6 +355,7 @@ void eval_while(Node* node)
 
 void eval_nop(Node* node)
 {
+        (void) node;
         return;
 }
 
@@ -583,26 +589,30 @@ int var_to_idx(Node* node, Var v)
 Var index_load(Node* node, Var container, int idx)
 {
         Var out;
+        String* s;
+        char c;
+        ArrayList* a;
 
         switch (container.type) {
         case TYPE_STRING:
-                String* s = container.data.s;
-                char c;
+                s = container.data.s;
                 check_str_bounds(s, idx);
                 c = string_get(s, idx);
                 set_int(&out, (int)c);
                 return out;
         case TYPE_ARRAY:
-                ArrayList* a = container.data.a;
+                a = container.data.a;
                 check_arr_bounds(a, idx);
                 return a->items[idx];
         default:
                 die(node, "cannot index into type %d", container.type);
         }
+        return out; /* unreachable */
 }
 
 Var index_store(Node* node, Var container, int idx, Var val)
 {
+        ArrayList* a;
         switch (container.type) {
         case TYPE_STRING:
                 if (val.type != TYPE_INT)
@@ -610,7 +620,7 @@ Var index_store(Node* node, Var container, int idx, Var val)
                 string_set(container.data.s, idx, (char)val.data.i);
                 return val;
         case TYPE_ARRAY:
-                ArrayList* a = container.data.a;
+                a = container.data.a;
                 if (val.type != a->type)
                         die(node, "type mismatch: array holds %d but got %d", a->type, val.type);
                 a->items[idx] = val;
@@ -618,6 +628,8 @@ Var index_store(Node* node, Var container, int idx, Var val)
         default:
                 die(node, "cannot index assign into type %d", container.type);
         }
+
+        return val; /* unreachable */
 }
 
 Var do_binop(Node* at, BinOp op, Var a, Var b)
@@ -644,8 +656,6 @@ Var eval_binop(Node* node)
 {
         Var a;
         Var b;
-        VarType type;
-        BinOpFunc func;
         BinOp op = node->op;
 
         a = eval_expr(node->children[0]);
@@ -691,35 +701,47 @@ Var eval_idx(Node* node)
 
 Var load_lvalue(Node* L)
 {
+        Var* v;
+        Var container;
+        Var idxv;
+        int idx;
+
         switch (L->type) {
         case NODE_VAR:
-                Var* v = env_get(L->varname);
+                v = env_get(L->varname);
                 if (!v)
                         die(L, "undefined variable '%s'", L->varname);
                 return *v;
         case NODE_IDX:
-                Var container = eval_expr(L->children[0]);
-                Var idxv = eval_expr(L->children[1]);
-                int idx = var_to_idx(L, idxv);
+                container = eval_expr(L->children[0]);
+                idxv = eval_expr(L->children[1]);
+                idx = var_to_idx(L, idxv);
                 return index_load(L, container, idx);
         default:
                 die(L, "Left hand side is not assignable");
         }
+
+        return container; /* unreachable */
 }
 
 void assign_lvalue(Node* L, Var val)
 {
+        Var* v;
+        Var container;
+        Var idxv;
+        int idx;
+
         switch (L->type) {
         case NODE_VAR:
-                Var* v = env_get(L->varname);
+                v = env_get(L->varname);
                 if (!v)
                         die(L, "undefined variable '%s'", L->varname);
                 *v = val;
                 return;
         case NODE_IDX:
-                Var container = eval_expr(L->children[0]);
-                Var idxv = eval_expr(L->children[1]);
-                int idx = var_to_idx(L, idxv);
+                container = eval_expr(L->children[0]);
+                idxv = eval_expr(L->children[1]);
+                idx = var_to_idx(L, idxv);
                 index_store(L, container, idx, val);
                 return;
         default:
@@ -740,7 +762,6 @@ Var eval_incdec_expr(Node* node)
         assign_lvalue(L, next);
 
         return (is_prefix) ? next : old;
-
 }
 
 void eval_incdec_stmt(Node* node)
@@ -912,4 +933,5 @@ Var eval_expr(Node* node)
         default:
                 die(node, "unhandled expression type: %s", node->type);
         }
+        return v;
 }

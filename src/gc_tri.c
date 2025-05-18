@@ -26,7 +26,6 @@ typedef struct GC_Header {
 
 static GC_Header* heap_head = NULL;
 static GC_Header* gray_head = NULL;
-static GC_Header* sweep_ptr = NULL;
 
 /* mark bit flips each gc cycle */
 static int current_mark_bit = 0;
@@ -134,7 +133,7 @@ int gc_step(void)
  * if max <= 0, sweep entire heap
  * returns number of objects freed
  */
-size_t gc_sweep(int max)
+size_t gc_sweep(size_t max)
 {
         GC_Header* h = heap_head;
         size_t freed = 0;

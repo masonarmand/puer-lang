@@ -2,10 +2,14 @@
 #include "builtin.h"
 #include "func.h"
 #include "puerlib.h"
+#include "gc_tri.h"
+#include "env.h"
+#include "builtin.h"
 #include <stdio.h>
 #include <limits.h>
 
-extern int yyparse();
+extern int yyparse(void);
+int yylex_destroy(void);
 extern FILE* yyin;
 extern Node* root;
 

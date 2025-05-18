@@ -24,8 +24,8 @@
 
 #define DEFINE_MOD_FN(type, ctype, field) \
         static Var mod_##type(Var a, Var b) { \
-                if (b.data.field == 0) die(NULL, "modulo by zero"); \
                 Var out; \
+                if (b.data.field == 0) die(NULL, "modulo by zero"); \
                 set_##type(&out, (ctype)(a.data.field % b.data.field)); \
                 return out; \
         }
@@ -57,11 +57,11 @@ DEFINE_CMP_FN(eq, uint, ui, ==)
 DEFINE_CMP_FN(ne, uint, ui, !=)
 
 /* LONG */
-DEFINE_BINOP_FN(add, long, long long, l, +)
-DEFINE_BINOP_FN(sub, long, long long, l, -)
-DEFINE_BINOP_FN(mul, long, long long, l, *)
-DEFINE_BINOP_FN(div, long, long long, l, /)
-DEFINE_MOD_FN(long, long long, l)
+DEFINE_BINOP_FN(add, long, long, l, +)
+DEFINE_BINOP_FN(sub, long, long, l, -)
+DEFINE_BINOP_FN(mul, long, long, l, *)
+DEFINE_BINOP_FN(div, long, long, l, /)
+DEFINE_MOD_FN(long, long, l)
 DEFINE_CMP_FN(lt, long, l, <)
 DEFINE_CMP_FN(gt, long, l, >)
 DEFINE_CMP_FN(le, long, l, <=)

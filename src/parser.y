@@ -6,6 +6,7 @@
 
 %code requires {
 #include "var.h"
+#include "rec.h"
 #include <stdlib.h>
 }
 
@@ -301,7 +302,7 @@ void yyerror(const char* s)
                 }
 
                 if (fgets(buf, sizeof(buf), yyin)) {
-                        unsigned int i;
+                        int i;
                         fprintf(stderr, "%s", buf);
 
                         for (i = 0; i <= yylloc.first_column; i++)

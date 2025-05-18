@@ -7,53 +7,51 @@
 #include <stdio.h>
 #include "ast.h"
 
-static const char* node_type_names[] = {
-        [NODE_NOP]      = "NODE_NOP",
-        [NODE_NUM]      = "NODE_NUM",
-        [NODE_FLOAT]    = "NODE_FLOAT",
-        [NODE_BINOP]    = "NODE_BINOP",
-        [NODE_PRINT]    = "NODE_PRINT",
-        [NODE_PRINTLN]  = "NODE_PRINTLN",
-        [NODE_SEQ]      = "NODE_SEQ",
-        [NODE_VAR]      = "NODE_VAR",
-        [NODE_VARDECL]  = "NODE_VARDECL",
-        [NODE_ASSIGN]   = "NODE_ASSIGN",
-        [NODE_IF]       = "NODE_IF",
-        [NODE_IFELSE]   = "NODE_IFELSE",
-        [NODE_FOR]      = "NODE_FOR",
-        [NODE_BREAK]    = "NODE_BREAK",
-        [NODE_CONTINUE] = "NODE_CONTINUE",
-        [NODE_LT]       = "NODE_LT",
-        [NODE_GT]       = "NODE_GT",
-        [NODE_LE]       = "NODE_LE",
-        [NODE_GE]       = "NODE_GE",
-        [NODE_EQ]       = "NODE_EQ",
-        [NODE_NE]       = "NODE_NE",
-        [NODE_FUNCDEF]  = "NODE_FUNCDEF",
-        [NODE_FUNCCALL] = "NODE_FUNCCALL",
-        [NODE_RETURN]   = "NODE_RETURN",
-        [NODE_IDX]      = "NODE_IDX",
-        [NODE_IDXASSIGN]= "NODE_IDXASSIGN",
-        [NODE_ARRAYLIT] = "NODE_ARRAYLIT",
-        [NODE_ARRAYDECL]= "NODE_ARRAYDECL",
-        [NODE_RECDEF]   = "NODE_RECDEF",
-        [NODE_FIELDDECL]= "NODE_FIELDDECL",
-        [NODE_FIELDASSIGN] = "NODE_FIELDASSIGN",
-        [NODE_FIELDACCESS] = "NODE_FIELDACCESS",
-};
-
 static const char* node_type_to_str(NodeType t)
 {
-        if ((unsigned)t < sizeof(node_type_names)/sizeof(*node_type_names)
-        && node_type_names[t])
-                return node_type_names[t];
-        return "UNKNOWN_NODE";
+        switch (t) {
+        case NODE_NOP:         return "NODE_NOP";
+        case NODE_NUM:         return "NODE_NUM";
+        case NODE_FLOAT:       return "NODE_FLOAT";
+        case NODE_BINOP:       return "NODE_BINOP";
+        case NODE_PRINT:       return "NODE_PRINT";
+        case NODE_PRINTLN:     return "NODE_PRINTLN";
+        case NODE_SEQ:         return "NODE_SEQ";
+        case NODE_VAR:         return "NODE_VAR";
+        case NODE_VARDECL:     return "NODE_VARDECL";
+        case NODE_ASSIGN:      return "NODE_ASSIGN";
+        case NODE_IF:          return "NODE_IF";
+        case NODE_IFELSE:      return "NODE_IFELSE";
+        case NODE_FOR:         return "NODE_FOR";
+        case NODE_BREAK:       return "NODE_BREAK";
+        case NODE_CONTINUE:    return "NODE_CONTINUE";
+        case NODE_LT:          return "NODE_LT";
+        case NODE_GT:          return "NODE_GT";
+        case NODE_LE:          return "NODE_LE";
+        case NODE_GE:          return "NODE_GE";
+        case NODE_EQ:          return "NODE_EQ";
+        case NODE_NE:          return "NODE_NE";
+        case NODE_FUNCDEF:     return "NODE_FUNCDEF";
+        case NODE_FUNCCALL:    return "NODE_FUNCCALL";
+        case NODE_RETURN:      return "NODE_RETURN";
+        case NODE_IDX:         return "NODE_IDX";
+        case NODE_IDXASSIGN:   return "NODE_IDXASSIGN";
+        case NODE_ARRAYLIT:    return "NODE_ARRAYLIT";
+        case NODE_ARRAYDECL:   return "NODE_ARRAYDECL";
+        case NODE_RECDEF:      return "NODE_RECDEF";
+        case NODE_FIELDDECL:   return "NODE_FIELDDECL";
+        case NODE_FIELDASSIGN: return "NODE_FIELDASSIGN";
+        case NODE_FIELDACCESS: return "NODE_FIELDACCESS";
+        default:               return "UNKNOWN_NODE";
+        }
+        return "UNKNOWN_NODE"; /* unreachable */
 }
 
-Node* node(NodeType type, YYLTYPE loc, int n_children, ...)
+Node* node(NodeType type, YYLTYPE loc, unsigned int n_children, ...)
 {
         Node* n = malloc(sizeof(Node));
         unsigned int i;
+        va_list args;
 
         n->type = type;
         n->n_children = n_children;
@@ -65,7 +63,6 @@ Node* node(NodeType type, YYLTYPE loc, int n_children, ...)
         n->lineno = loc.first_line;
         n->column = loc.first_column;
 
-        va_list args;
         va_start(args, n_children);
         for (i = 0; i < n_children; i++)
                 n->children[i] = va_arg(args, Node*);
@@ -78,6 +75,7 @@ Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs)
 {
         Node* binop = node(NODE_BINOP, loc, 2, lhs, rhs);
         binop->op = op;
+        return binop;
 }
 
 Node* node_incdec(BinOp op, YYLTYPE loc, Node* child, int is_prefix)
@@ -92,6 +90,7 @@ Node* node_compound(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs)
 {
         Node* compound = node(NODE_COMPOUND, loc, 2, lhs, rhs);
         compound->op = op;
+        return compound;
 }
 
 void setvar(Node* node, VarType type, char* varname)
@@ -116,7 +115,7 @@ Node* node_uminus(Node* n, YYLTYPE loc)
         Node* binop = node(NODE_BINOP, loc, 2, zero, n);
         zero->ival = 0;
         binop->op = OP_SUB;
-
+        return binop;
 }
 
 Node* node_param(VarType type, char* varname, YYLTYPE loc)
@@ -158,9 +157,10 @@ Node* node_append_type(Node* list, NodeType type, YYLTYPE loc)
 {
         Node* n = node(type, loc, 0);
         node_append(list, n);
+        return n;
 }
 
-void print_ast(Node* node, int depth)
+void print_ast(Node* node, unsigned int depth)
 {
         unsigned int i;
 
@@ -174,7 +174,7 @@ void print_ast(Node* node, int depth)
 
 void free_ast(Node* node)
 {
-        int i;
+        unsigned int i;
         if (!node)
                 return;
 

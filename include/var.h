@@ -44,8 +44,8 @@ typedef struct Var {
 struct ArrayList {
         VarType type;
         Var* items;
-        int size;
-        int capacity;
+        unsigned int size;
+        unsigned int capacity;
 };
 
 Var var_clone(const Var* src);

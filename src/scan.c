@@ -48,7 +48,7 @@ void scan_string(void* payload, GC_MarkFn mark)
 void scan_arraylist(void* payload, GC_MarkFn mark)
 {
         ArrayList* a = payload;
-        int i;
+        unsigned int i;
         if (a->items)
                 mark(a->items);
 

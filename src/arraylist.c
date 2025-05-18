@@ -2,6 +2,7 @@
 #include "scan.h"
 #include "arraylist.h"
 #include "puerstring.h"
+#include "util.h"
 #include <string.h>
 
 ArrayList* arraylist_new(VarType type, int initial_capacity)
@@ -17,7 +18,7 @@ ArrayList* arraylist_new(VarType type, int initial_capacity)
 ArrayList* arraylist_clone(const ArrayList* src)
 {
         ArrayList* dst = arraylist_new(src->type, src->size);
-        int i;
+        unsigned int i;
         for (i = 0; i < src->size; i++) {
                 Var child_copy = var_clone(&src->items[i]);
                 arraylist_push(dst, child_copy);

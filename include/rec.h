@@ -18,10 +18,10 @@ typedef struct RecDef {
         UT_hash_handle hh;
 } RecDef;
 
-typedef struct RecInst {
+struct RecInst {
         RecDef* def;
         Var* fields;
-} RecInst;
+};
 
 RecDef* recdef_new(const char* name, const char** field_names, const Var* fields, unsigned int n_fields);
 RecDef* recdef_find(const char* name);
