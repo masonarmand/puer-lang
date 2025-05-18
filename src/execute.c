@@ -174,6 +174,9 @@ void print_var(Node* node, const Var* v)
         case TYPE_INT:
                 printf("%d", v->data.i);
                 break;
+        case TYPE_CHAR:
+                printf("%c", v->data.c);
+                break;
         case TYPE_UINT:
                 printf("%u", v->data.ui);
                 break;
@@ -584,7 +587,7 @@ Var index_load(Node* node, Var container, int idx)
                 s = container.data.s;
                 check_str_bounds(s, idx);
                 c = string_get(s, idx);
-                set_int(&out, (int)c);
+                set_char(&out, c);
                 return out;
         case TYPE_ARRAY:
                 a = container.data.a;
@@ -601,9 +604,9 @@ Var index_store(Node* node, Var container, int idx, Var val)
         ArrayList* a;
         switch (container.type) {
         case TYPE_STRING:
-                if (val.type != TYPE_INT)
+                if (val.type != TYPE_INT && val.type != TYPE_CHAR)
                         die(node, "can only assign char to string character");
-                string_set(container.data.s, idx, (char)val.data.i);
+                string_set(container.data.s, idx, as_int(val));
                 return val;
         case TYPE_ARRAY:
                 a = container.data.a;
@@ -691,6 +694,7 @@ Var load_lvalue(Node* L)
         Var container;
         Var idxv;
         int idx;
+        RecInst* ri;
         Var dummy = { 0 };
 
         switch (L->type) {
@@ -704,6 +708,12 @@ Var load_lvalue(Node* L)
                 idxv = eval_expr(L->children[1]);
                 idx = var_to_idx(L, idxv);
                 return index_load(L, container, idx);
+        case NODE_FIELDACCESS:
+                container = eval_expr(L->children[0]);
+                if (container.type != TYPE_REC)
+                        die(L, "cannot access field on non-record");
+                ri = container.data.r;
+                return *rec_get_field(ri, L->varname);
         default:
                 die(L, "Left hand side is not assignable");
         }
@@ -717,6 +727,7 @@ void assign_lvalue(Node* L, Var val)
         Var container;
         Var idxv;
         int idx;
+        RecInst* ri;
 
         switch (L->type) {
         case NODE_VAR:
@@ -730,6 +741,13 @@ void assign_lvalue(Node* L, Var val)
                 idxv = eval_expr(L->children[1]);
                 idx = var_to_idx(L, idxv);
                 index_store(L, container, idx, val);
+                return;
+        case NODE_FIELDACCESS:
+                container = eval_expr(L->children[0]);
+                if (container.type != TYPE_REC)
+                        die(L, "cannot access field on non-record");
+                ri = container.data.r;
+                rec_set_field(ri, L->varname, val);
                 return;
         default:
                 die(L, "Left hand side is not assignable");
@@ -895,7 +913,7 @@ Var eval_expr(Node* node)
         case NODE_ARRAYLIT:
                 return eval_arraylit(node);
         case NODE_CHAR:
-                set_int(&v, node->ival);
+                set_char(&v, node->ival);
                 return v;
         case NODE_BOOL:
                 set_bool(&v, node->ival);

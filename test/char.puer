@@ -1,0 +1,9 @@
+char c = '@';
+
+println(c);
+
+str string = "---------";
+
+string[3] = c;
+
+println(string);

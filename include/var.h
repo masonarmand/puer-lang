@@ -18,6 +18,7 @@ typedef enum VarType {
         TYPE_FLOAT,
         TYPE_BOOL,
         TYPE_STRING,
+        TYPE_CHAR,
         TYPE_ARRAY,
         TYPE_VOID,
         TYPE_REC,
@@ -34,6 +35,7 @@ typedef struct Var {
                 int b;
                 float f;
                 String* s;
+                char c;
                 ArrayList* a;
                 RecInst* r;
         } data;
@@ -58,6 +60,7 @@ float to_long(const Var* v);
 void set_void(Var* v);
 void set_bool(Var* v, int val);
 void set_int(Var* v, int val);
+void set_char(Var* v, int val);
 void set_rec(Var* v, RecInst* val);
 void set_uint(Var* v, unsigned int val);
 void set_float(Var* v, float val);

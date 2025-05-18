@@ -121,6 +121,7 @@ int yycolumn = 1;
 "long"                   { yylval.vartype = TYPE_LONG; return TYPE; }
 "float"                  { yylval.vartype = TYPE_FLOAT; return TYPE; }
 "str"                    { yylval.vartype = TYPE_STRING; return TYPE; }
+"char"                   { yylval.vartype = TYPE_CHAR; return TYPE; }
 
 "rec"                    return REC;
 

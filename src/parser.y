@@ -184,7 +184,12 @@ expr
     ;
 
 vardecl
-    : TYPE dims IDENT opt_init        { $$ = node(NODE_ARRAYDECL, @$, 2, $2, $4); setvar($$, $1, $3); }
+    : TYPE dims IDENT opt_init        {
+        $$ = node(NODE_ARRAYDECL, @$, 2, $2, $4);
+        setvar($$, $1, $3);
+        if ($1 == TYPE_REC)
+                $$->recname = g_recname;
+    }
     | TYPE IDENT opt_init             {
         $$ = node(NODE_VARDECL, @$, 1, $3);
         setvar($$, $1, $2);

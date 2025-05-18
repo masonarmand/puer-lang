@@ -1,0 +1,81 @@
+rec Position {
+        int x;
+        int y;
+};
+
+rec Entity {
+        Position pos;
+        char ch;
+};
+
+rec Tile {
+        char ch = '.';
+        bool walkable;
+};
+
+int MAP_HEIGHT = 25;
+int MAP_WIDTH = 79;
+Entity player;
+Tile[MAP_HEIGHT][MAP_WIDTH] map;
+
+def main()
+{
+        Position start_pos;
+        start_pos.x = 10;
+        start_pos.y = 20;
+
+        player = create_player(start_pos);
+
+        game_loop();
+}
+
+def create_player(Position start_pos) -> Entity
+{
+        Entity new_player;
+        new_player.pos.y = start_pos.y;
+        new_player.pos.x = start_pos.x;
+        new_player.ch = '@';
+
+        return new_player;
+}
+
+def handle_input(int input)
+{
+        if (input == 'k')
+                player.pos.y--;
+        else if (input == 'j')
+                player.pos.y++;
+        else if (input == 'h')
+                player.pos.x--;
+        else if (input == 'l')
+                player.pos.x++;
+}
+
+def draw_world()
+{
+        for (int y = 0; y < MAP_HEIGHT; y++) {
+                for (int x = 0; x < MAP_WIDTH; x++) {
+                        if ((player.pos.x == x) && (player.pos.y == y))
+                                print(player.ch);
+                        else
+                                print(map[y][x].ch);
+                }
+                println();
+        }
+}
+
+def game_loop()
+{
+        int ch;
+
+        draw_world();
+        while (ch = getch()) {
+                if (ch == 'q')
+                        break;
+                handle_input(ch);
+                clear();
+                draw_world();
+        }
+}
+
+main();

@@ -88,6 +88,9 @@ void cast_to(Var* v, VarType target)
                 case TYPE_LONG:
                         v->data.f = (float)v->data.l;
                         break;
+                case TYPE_CHAR:
+                        v->data.f = (float)v->data.c;
+                        break;
                 default: die(NULL, "cannot cast to float");
                 }
                 v->type = TYPE_FLOAT;
@@ -102,6 +105,9 @@ void cast_to(Var* v, VarType target)
                         break;
                 case TYPE_LONG:
                         v->data.i = (int)v->data.l;
+                        break;
+                case TYPE_CHAR:
+                        v->data.i = (int)v->data.c;
                         break;
                 default: die(NULL, "cannot cast to int");
                 }
@@ -120,6 +126,9 @@ void cast_to(Var* v, VarType target)
                         break;
                 case TYPE_LONG:
                         v->data.b = (int)v->data.l;
+                        break;
+                case TYPE_CHAR:
+                        v->data.b = (int)v->data.c;
                         break;
                 default: die(NULL, "cannot cast to bool");
                 }
@@ -178,6 +187,12 @@ void set_rec(Var* v, RecInst* val)
         v->data.r = val;
 }
 
+void set_char(Var* v, int val)
+{
+        v->type = TYPE_CHAR;
+        v->data.c = val;
+}
+
 void set_int(Var* v, int val)
 {
         v->type = TYPE_INT;
@@ -227,6 +242,8 @@ int as_int(Var v)
         if (v.type == TYPE_BOOL) {
                 return v.data.b;
         }
+        if (v.type == TYPE_CHAR)
+                return v.data.c;
         if (v.type != TYPE_INT) {
                 die(NULL, "Expected int, got type %d\n", v.type);
         }
