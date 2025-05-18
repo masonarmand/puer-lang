@@ -11,7 +11,7 @@
 typedef struct Builtin {
         const char* name;
         VarType* param_types;
-        int n_params;
+        unsigned int n_params;
         VarType return_type;
         BuiltinFn fn;
         UT_hash_handle hh;
@@ -19,23 +19,32 @@ typedef struct Builtin {
 
 static Builtin* builtin_table = NULL;
 
-void builtin_register(const char* name,
-                      BuiltinFn fn,
-                      VarType* param_types,
-                      int n_params,
-                      VarType return_type)
+void builtin_register(const char* name, BuiltinFn fn, VarType ret_type, int n_params, ...)
 {
         Builtin* b;
+        VarType* param_types = NULL;
+        if (n_params > 0) {
+                va_list ap;
+                int i;
+
+                param_types = malloc(sizeof(VarType) * n_params);
+                va_start(ap, n_params);
+                for (i = 0; i < n_params; i++)
+                        param_types[i] = va_arg(ap, VarType);
+                va_end(ap);
+        }
+
         HASH_FIND_STR(builtin_table, name, b);
         if (b) {
                 fprintf(stderr, "Builtin function '%s' is already registered.\n", name);
                 return;
         }
+
         b = malloc(sizeof(Builtin));
         b->name = strdup(name);
         b->param_types = param_types;
         b->n_params = n_params;
-        b->return_type = return_type;
+        b->return_type = ret_type;
         b->fn = fn;
         HASH_ADD_KEYPTR(hh, builtin_table, b->name, strlen(b->name), b);
 }
@@ -64,7 +73,7 @@ int call_builtin_if_exists(Node* node, Var* out)
         Var result;
         Var* argv;
         Node* argv_nodes;
-        int i;
+        unsigned int i;
 
         if (!b)
                 return 0;
