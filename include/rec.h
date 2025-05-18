@@ -30,6 +30,7 @@ Var* rec_get_field(RecInst* ri, const char* field_name);
 void rec_set_field(RecInst* ri, const char* field_name, Var val);
 void recdef_register(RecDef* rd);
 void recdef_clear(void);
+RecInst* rec_clone(const RecInst* src);
 
 int is_rec_name(const char* name);
 void recname_register(const char* name);

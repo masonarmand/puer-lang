@@ -61,6 +61,7 @@ Var index_store(Node* node, Var container, int idx, Var val);
 Var index_load(Node* node, Var container, int idx);
 Var load_lvalue(Node* L);
 void assign_lvalue(Node* L, Var val);
+Var init_var(Node* ctx, VarType type, Node* init_node, const char* recname);
 
 static StmtHandler handlers[NODE_LASTNODE];
 
@@ -257,27 +258,12 @@ void eval_vardecl(Node* node)
         if ((get = env_get(node->varname)))
                 die(node, "'%s' has already been declared as type: '%d'", node->varname, get->type);
 
-        if (node->vartype == TYPE_REC) {
-                RecInst* ri = rec_new(node->recname);
-                Var vrec;
-                set_rec(&vrec, ri);
-                env_set(node->varname, vrec);
-                return;
-        }
-
-        /* if var is initialized with a value */
-        if (node->n_children > 0) {
-                Var result = eval_expr(node->children[0]);
-                result = implicit_convert(result, node->vartype);
-
-                if (result.type != node->vartype) {
-                        die(node, "init expr type mismatch for '%s'", node->varname);
-                }
-                v = result;
-        }
-        else if (v.type == TYPE_STRING) {
-                v.data.s = string_new("");
-        }
+        v = init_var(
+                node,
+                node->vartype,
+                node->n_children > 0 ? node->children[0] : NULL,
+                node->recname
+        );
 
         env_set(node->varname, v);
 }
@@ -750,6 +736,41 @@ void assign_lvalue(Node* L, Var val)
         }
 }
 
+Var init_var(Node* ctx, VarType type, Node* init_node, const char* recname)
+{
+        Var v;
+        v.type = type;
+
+        if (init_node && init_node->type != NODE_NOP) {
+                Var r = eval_expr(init_node);
+                r = implicit_convert(r, type);
+                if (r.type != type) {
+                        die(
+                                ctx,
+                                "init expr type mismatch for '%s': expected %d got %d",
+                                ctx->varname, type, r.type
+                        );
+                }
+                return r;
+        }
+
+        switch (type) {
+                case TYPE_STRING:
+                        v.data.s = string_new("");
+                        break;
+                case TYPE_ARRAY:
+                        v.data.a = arraylist_new(v.type, 0);
+                        break;
+                case TYPE_REC:
+                        v.data.r = rec_new(recname);
+                        break;
+                default:
+                        /* non initialized value (UB) */
+                        break;
+        }
+        return v;
+}
+
 Var eval_incdec_expr(Node* node)
 {
         Node* L = node->children[0];
@@ -793,24 +814,15 @@ void eval_recdef(Node* node)
         for (i = 0; i < n; i++) {
                 Var v;
                 Node* f = seq->children[i];
-                int has_init;
-
-                v.type = f->vartype;
                 names[i] = strdup(f->varname);
 
-                has_init = (f->n_children == 1 && f->children[0]->type != NODE_NOP);
+                v = init_var(
+                        node,
+                        f->vartype,
+                        (f->n_children==1 && f->children[0]->type!=NODE_NOP) ? f->children[0] : NULL,
+                        f->recname
+                );
 
-                if (has_init) {
-                        v = eval_expr(f->children[0]);
-                        v = implicit_convert(v, f->vartype);
-
-                        if (v.type != f->vartype) {
-                                die(node, "init expr type mismatch for '%s'", f->varname);
-                        }
-                }
-                else if (v.type == TYPE_STRING) {
-                        v.data.s = string_new("");
-                }
                 defs[i] = v;
         }
 

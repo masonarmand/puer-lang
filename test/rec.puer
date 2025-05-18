@@ -1,14 +1,33 @@
 rec Point {
-        int x = 10;
-        int y = 200;
+        int x = 0;
+        int y = 0;
 };
 
-def set_point(Point point)
+rec Line {
+        Point a;
+        Point b;
+};
+
+def set_point(Point point, int x, int y)
 {
-        point.x = 0;
-        point.y = 0;
+        point.x = x;
+        point.y = y;
 }
 
-Point p;
-set_point(p);
-println(p.x, p.y);
+def set_line(Line line, Point a, Point b)
+{
+        line.a = a;
+        line.b = b;
+}
+Line l;
+Point p1;
+Point p2;
+
+set_point(p1, 20, 400);
+set_point(p2, 50, 100);
+
+set_line(l, p1, p2);
+
+println(l);
+p1.x = 200000;
+println(l);

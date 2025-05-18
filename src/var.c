@@ -1,6 +1,8 @@
 #include "var.h"
+#include "rec.h"
 #include "arraylist.h"
 #include "util.h"
+#include "ast.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +19,9 @@ Var var_clone(const Var* src)
                 break;
         case TYPE_STRING:
                 out.data.s = string_clone(src->data.s);
+                break;
+        case TYPE_REC:
+                out.data.r = rec_clone(src->data.r);
                 break;
         default:
                 out.data = src->data;

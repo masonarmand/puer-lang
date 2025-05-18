@@ -80,13 +80,17 @@ RecInst* rec_new(const char* recdef_name)
 {
         RecDef* rd = recdef_find(recdef_name);
         RecInst* ri;
+        unsigned int i;
         if (!rd)
                 die(NULL, "unknown record '%s'", recdef_name);
 
         ri = gc_alloc(sizeof(RecInst), scan_rec);
         ri->def = rd;
         ri->fields = gc_alloc(sizeof(Var) * rd->n_fields, scan_raw);
-        memcpy(ri->fields, rd->fields, sizeof(Var) * rd->n_fields);
+
+        for (i = 0; i < rd->n_fields; i++)
+                ri->fields[i] = var_clone(&rd->fields[i]);
+
         return ri;
 }
 
@@ -134,4 +138,18 @@ void recname_clear(void)
                 free(cur->name);
                 free(cur);
         }
+}
+
+RecInst* rec_clone(const RecInst* src)
+{
+        RecInst* dst = gc_alloc(sizeof(RecInst), scan_rec);
+        unsigned int i;
+
+        dst->def = src->def;
+        dst->fields = gc_alloc(sizeof(Var) * src->def->n_fields, scan_raw);
+
+        for (i = 0; i < src->def->n_fields; i++)
+                dst->fields[i] = var_clone(&src->fields[i]);
+
+        return dst;
 }
