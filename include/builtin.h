@@ -10,19 +10,10 @@
 
 typedef Var (*BuiltinFn)(Node *node, Var *args);
 
-void builtin_register(const char* name, BuiltinFn fn, VarType* param_types, int n_params, VarType return_type);
+void builtin_register(const char* name, BuiltinFn fn, VarType ret_type, int n_params, ...);
+void builtin_clear(void);
 
 int call_builtin_if_exists(Node* node, Var* out);
-
-#define REGISTER_BUILTIN(fn, ret, ...) \
-        static VarType fn##_param_types[] = { __VA_ARGS__ }; \
-        builtin_register( \
-                #fn, fn, \
-                fn##_param_types, \
-                sizeof(fn##_param_types) / sizeof(fn##_param_types[0]), \
-                ret \
-        )
-
 
 
 #endif

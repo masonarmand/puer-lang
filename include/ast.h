@@ -54,6 +54,11 @@ typedef enum {
         NODE_ARRAYLIT,
         NODE_ARRAYDECL,
 
+        NODE_RECDEF,
+        NODE_FIELDDECL,
+        NODE_FIELDASSIGN,
+        NODE_FIELDACCESS,
+
         /* control flow */
         NODE_IF,
         NODE_IFELSE,
@@ -83,7 +88,7 @@ typedef struct Node {
         NodeType type;
         BinOp op;
         struct Node** children;
-        int n_children;
+        unsigned int n_children;
 
         /* file metadata */
         int lineno;
@@ -94,14 +99,17 @@ typedef struct Node {
         int ival; /* for NODE_NUM */
         float fval; /* for NODE_FLOAT */
 
+        char* recname; /* for record vardecl */
         char* varname; /* function names, variable names, identifiers */
         VarType vartype; /* VARDECL, PARAM, FUNCDECL type */
 } Node;
 
 #include "parser.tab.h"
 
+extern char* g_recname;
+
 /* ast.c */
-Node* node(NodeType type, YYLTYPE loc, int n_children, ...);
+Node* node(NodeType type, YYLTYPE loc, unsigned int n_children, ...);
 Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);
 Node* node_incdec(BinOp op, YYLTYPE loc, Node* child, int is_prefix);
 Node* node_compound(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);
@@ -115,7 +123,7 @@ void setvar(Node* node, VarType type, char* varname);
 void setname(Node* node, char* varname);
 void settype(Node* node, VarType type);
 
-void print_ast(Node* node, int depth);
+void print_ast(Node* node, unsigned int depth);
 void free_ast(Node* node);
 
 /* execute.c */

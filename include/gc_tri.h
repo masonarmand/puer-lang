@@ -13,10 +13,11 @@ void gc_init(void);
 void* gc_alloc(size_t size, GC_ScanFn scan);
 void* gc_realloc(void* ptr, size_t new_size, GC_ScanFn scan);
 int gc_collect_step(void);
+void gc_collect_full(void);
 
 void gc_mark_root(void* payload);
 int gc_step(void);
-size_t gc_sweep(int max);
+size_t gc_sweep(size_t max);
 
 #define gc_sweep_all() gc_sweep(0)
 #define gc_sweep_slice(n) gc_sweep(n)

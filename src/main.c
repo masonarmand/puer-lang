@@ -2,10 +2,14 @@
 #include "builtin.h"
 #include "func.h"
 #include "puerlib.h"
+#include "gc_tri.h"
+#include "env.h"
+#include "builtin.h"
 #include <stdio.h>
 #include <limits.h>
 
-extern int yyparse();
+extern int yyparse(void);
+int yylex_destroy(void);
 extern FILE* yyin;
 extern Node* root;
 
@@ -28,6 +32,8 @@ int main(int argc, char** argv)
 
         if (!yyparse()) {
                 /*print_ast(root, 0);*/
+                recname_clear();
+
                 init_handlers();
                 gc_init();
                 init_puerlib();
@@ -39,6 +45,7 @@ int main(int argc, char** argv)
                 builtin_clear();
                 func_clear();
                 gc_collect_full();
+                recdef_clear();
         }
         fclose(yyin);
         yylex_destroy();

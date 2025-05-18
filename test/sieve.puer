@@ -25,8 +25,8 @@ def sieve(int n) -> int[]
         return primes;
 }
 
-int n = 100;
-println("Calculating primes up to:", n);
-int[] p = sieve(n);
+int num = 100;
+println("Calculating primes up to:", num);
+int[] p = sieve(num);
 println(p);
 println("done");

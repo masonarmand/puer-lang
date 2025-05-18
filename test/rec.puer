@@ -1,0 +1,14 @@
+rec Point {
+        int x = 10;
+        int y = 200;
+};
+
+def set_point(Point point)
+{
+        point.x = 0;
+        point.y = 0;
+}
+
+Point p;
+set_point(p);
+println(p.x, p.y);

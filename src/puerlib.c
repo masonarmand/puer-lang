@@ -7,8 +7,10 @@
 #include "builtin.h"
 #include "puerlib.h"
 #include "var.h"
+#include "arraylist.h"
 #include "puerstring.h"
 #include "scan.h"
+#include "util.h"
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -18,6 +20,7 @@
 
 Var getch(Node* node, Var* argv)
 {
+        Var out;
         /* implementation from conio.h */
 
         struct termios oldattr, newattr;
@@ -30,7 +33,8 @@ Var getch(Node* node, Var* argv)
         tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
 
 
-        Var out;
+        (void) argv;
+        (void) node;
         set_int(&out, ch);
         return out;
 }
@@ -67,6 +71,8 @@ Var input(Node* node, Var* argv)
 Var clear(Node* node, Var* argv)
 {
         Var out;
+        (void) argv;
+        (void) node;
         fputs("\x1b[2J\x1b[H", stdout);
         fflush(stdout);
         set_void(&out);
@@ -76,6 +82,8 @@ Var clear(Node* node, Var* argv)
 Var testlib(Node* node, Var* argv)
 {
         Var out;
+        (void) argv;
+        (void) node;
         fputs("Puer Standard Library !!\n", stdout);
         fflush(stdout);
         set_void(&out);
@@ -126,6 +134,8 @@ Var append(Node* node, Var* argv)
 Var gc_collect(Node* node, Var* argv)
 {
         Var out;
+        (void) argv;
+        (void) node;
         set_void(&out);
         gc_collect_full();
         return out;
@@ -133,11 +143,11 @@ Var gc_collect(Node* node, Var* argv)
 
 void init_puerlib(void)
 {
-        REGISTER_BUILTIN(input, TYPE_STRING, TYPE_STRING);
-        REGISTER_BUILTIN(testlib, TYPE_VOID);
-        REGISTER_BUILTIN(getch, TYPE_INT);
-        REGISTER_BUILTIN(clear, TYPE_VOID);
-        REGISTER_BUILTIN(len, TYPE_INT, TYPE_ANY);
-        REGISTER_BUILTIN(append, TYPE_VOID, TYPE_ANY, TYPE_ANY);
-        REGISTER_BUILTIN(gc_collect, TYPE_VOID);
+        builtin_register("input",      input,      TYPE_STRING, 1, TYPE_STRING);
+        builtin_register("testlib",    testlib,    TYPE_VOID,   0);
+        builtin_register("getch",      getch,      TYPE_INT,    0);
+        builtin_register("clear",      clear,      TYPE_VOID,   0);
+        builtin_register("len",        len,        TYPE_INT,    1, TYPE_ANY);
+        builtin_register("append",     append,     TYPE_VOID,   2, TYPE_ANY, TYPE_ANY);
+        builtin_register("gc_collect", gc_collect, TYPE_VOID,   0);
 }

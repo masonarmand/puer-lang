@@ -6,6 +6,7 @@ typedef struct {
         unsigned int length;
 } String;
 
+void check_str_bounds(String* s, int index);
 String* string_new(const char* cstr);
 String* string_concat(String* a, String* b);
 String* string_clone(const String* s);

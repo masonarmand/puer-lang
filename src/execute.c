@@ -5,6 +5,7 @@
 #include "func.h"
 #include "builtin.h"
 #include "arraylist.h"
+#include "rec.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,12 +43,16 @@ void eval_idxassign_stmt(Node* node);
 void eval_arraydecl(Node* node);
 void eval_compound_stmt(Node* node);
 void eval_incdec_stmt(Node* node);
+void eval_recdef(Node* node);
+void eval_fieldassign_stmt(Node* node);
 
 Var eval_funccall(Node* node);
 Var eval_assign_expr(Node* node);
 Var eval_idxassign_expr(Node* node);
 Var eval_compound_expr(Node* node);
 Var eval_incdec_expr(Node* node);
+Var eval_fieldaccess(Node* node);
+Var eval_fieldassign_expr(Node* node);
 
 /* helpers */
 void print_var(Node* node, const Var* v);
@@ -61,22 +66,24 @@ static StmtHandler handlers[NODE_LASTNODE];
 
 void init_handlers(void)
 {
-        handlers[NODE_NOP]       = eval_nop;
-        handlers[NODE_SEQ]       = eval_seq;
-        handlers[NODE_PRINT]     = eval_print;
-        handlers[NODE_PRINTLN]   = eval_println;
-        handlers[NODE_VARDECL]   = eval_vardecl;
-        handlers[NODE_ASSIGN]    = eval_assign_stmt;
-        handlers[NODE_IF]        = eval_if;
-        handlers[NODE_IFELSE]    = eval_ifelse;
-        handlers[NODE_FOR]       = eval_for;
-        handlers[NODE_WHILE]     = eval_while;
-        handlers[NODE_FUNCDEF]   = eval_funcdef;
-        handlers[NODE_FUNCCALL]  = eval_funccall_stmt;
-        handlers[NODE_IDXASSIGN] = eval_idxassign_stmt;
-        handlers[NODE_ARRAYDECL] = eval_arraydecl;
-        handlers[NODE_COMPOUND]  = eval_compound_stmt;
-        handlers[NODE_INCDEC]    = eval_incdec_stmt;
+        handlers[NODE_NOP]         = eval_nop;
+        handlers[NODE_SEQ]         = eval_seq;
+        handlers[NODE_PRINT]       = eval_print;
+        handlers[NODE_PRINTLN]     = eval_println;
+        handlers[NODE_VARDECL]     = eval_vardecl;
+        handlers[NODE_ASSIGN]      = eval_assign_stmt;
+        handlers[NODE_IF]          = eval_if;
+        handlers[NODE_IFELSE]      = eval_ifelse;
+        handlers[NODE_FOR]         = eval_for;
+        handlers[NODE_WHILE]       = eval_while;
+        handlers[NODE_FUNCDEF]     = eval_funcdef;
+        handlers[NODE_FUNCCALL]    = eval_funccall_stmt;
+        handlers[NODE_IDXASSIGN]   = eval_idxassign_stmt;
+        handlers[NODE_ARRAYDECL]   = eval_arraydecl;
+        handlers[NODE_COMPOUND]    = eval_compound_stmt;
+        handlers[NODE_INCDEC]      = eval_incdec_stmt;
+        handlers[NODE_RECDEF]      = eval_recdef;
+        handlers[NODE_FIELDASSIGN] = eval_fieldassign_stmt;
 }
 
 void eval(Node* node)
@@ -137,24 +144,30 @@ CtrlSignal eval_ifelse_ctrl(Node* node)
 
 CtrlSignal eval_block(Node* node)
 {
+        CtrlSignal sig;
         env_push();
-        CtrlSignal sig = eval_with_ctrl(node);
+        sig = eval_with_ctrl(node);
         env_pop();
         return sig;
 }
 
 void eval_seq(Node* node)
 {
-        int i;
+        unsigned int i;
         for (i = 0; i < node->n_children; i++) {
                 eval(node->children[i]);
-                gc_collect_step();
+                /*gc_collect_step();*/
                 /*gc_collect_full();*/
         }
 }
 
 void print_var(Node* node, const Var* v)
 {
+        unsigned int i;
+        unsigned int n;
+        ArrayList* a;
+        RecInst* r;
+
         switch (v->type) {
         case TYPE_INT:
                 printf("%d", v->data.i);
@@ -169,15 +182,13 @@ void print_var(Node* node, const Var* v)
                 printf("%f", v->data.f);
                 break;
         case TYPE_BOOL:
-                /* TODO (data == 1) ? "true" : "false" */
                 printf(v->data.b ? "true" : "false");
                 break;
         case TYPE_STRING:
                 printf("%s", v->data.s->data);
                 break;
         case TYPE_ARRAY:
-                ArrayList* a = v->data.a;
-                int i;
+                a = v->data.a;
                 printf("[");
                 for (i = 0; i < a->size; i++) {
                         int is_str = (a->items[i].type == TYPE_STRING);
@@ -190,6 +201,23 @@ void print_var(Node* node, const Var* v)
                                 printf(", ");
                 }
                 printf("]");
+                break;
+        case TYPE_REC:
+                r = v->data.r;
+                n = r->def->n_fields;
+
+                printf("{");
+                for (i = 0; i < n; i++) {
+                        int is_str = (r->fields[i].type == TYPE_STRING);
+                        if (is_str)
+                                printf("\"");
+                        print_var(node, &r->fields[i]);
+                        if (is_str)
+                                printf("\"");
+                        if (i + 1 < n)
+                                printf(", ");
+                }
+                printf("}");
                 break;
         default:
                 die(node, "unsupported type in print");
@@ -223,11 +251,19 @@ void eval_println(Node* node)
 void eval_vardecl(Node* node)
 {
         Var v;
-        v.type = node->vartype;
         Var* get;
+        v.type = node->vartype;
 
-        if (get = env_get(node->varname))
+        if ((get = env_get(node->varname)))
                 die(node, "'%s' has already been declared as type: '%d'", node->varname, get->type);
+
+        if (node->vartype == TYPE_REC) {
+                RecInst* ri = rec_new(node->recname);
+                Var vrec;
+                set_rec(&vrec, ri);
+                env_set(node->varname, vrec);
+                return;
+        }
 
         /* if var is initialized with a value */
         if (node->n_children > 0) {
@@ -319,6 +355,7 @@ void eval_while(Node* node)
 
 void eval_nop(Node* node)
 {
+        (void) node;
         return;
 }
 
@@ -384,11 +421,42 @@ Var eval_funccall(Node* node)
                 Node* arg_expr = node->children[0]->children[i];
                 Var arg_val = eval_expr(arg_expr);
 
+                if (env_get(param->varname))
+                        die(node, "variable '%s' already declared elsewhere", param->varname);
                 if (arg_val.type != param->vartype) {
                         die(node, "function '%s' argument %d: expected type %d, got %d",
-                                node->varname, i + 1, param->vartype, arg_val.type);
+                                node->varname,
+                                i + 1,
+                                param->vartype,
+                                arg_val.type
+                        );
                 }
-                env_set(param->varname, arg_val);
+
+                if (param->vartype == TYPE_REC) {
+                        RecInst* ri = arg_val.data.r;
+                        Var* orig;
+
+                        if (strcmp(ri->def->name, param->recname) != 0) {
+                                die(node, "function '%s' argument %d: expected record '%s', got '%s'",
+                                        node->varname,
+                                        i + 1,
+                                        param->recname,
+                                        ri->def->name
+                                );
+                        }
+
+                        if (arg_expr->type != NODE_VAR)
+                                die(node, "function '%s': record argument must be a variable", node->varname);
+
+                        orig = env_get(arg_expr->varname);
+                        if (!orig)
+                                die(node, "undefined variable '%s'", arg_expr->varname);
+                        env_set_ptr(param->varname, orig);
+                }
+                else {
+                        env_set(param->varname, arg_val);
+                }
+
         }
 
         sig = eval_with_ctrl(body);
@@ -403,7 +471,7 @@ Var eval_funccall(Node* node)
         else {
                 if (func->vartype != TYPE_VOID)
                         die(node, "function '%s': missing return value", node->varname);
-                set_void(g_retval);
+                set_void(&g_retval);
         }
 
         env_pop();
@@ -521,26 +589,30 @@ int var_to_idx(Node* node, Var v)
 Var index_load(Node* node, Var container, int idx)
 {
         Var out;
+        String* s;
+        char c;
+        ArrayList* a;
 
         switch (container.type) {
         case TYPE_STRING:
-                String* s = container.data.s;
-                char c;
+                s = container.data.s;
                 check_str_bounds(s, idx);
                 c = string_get(s, idx);
                 set_int(&out, (int)c);
                 return out;
         case TYPE_ARRAY:
-                ArrayList* a = container.data.a;
+                a = container.data.a;
                 check_arr_bounds(a, idx);
                 return a->items[idx];
         default:
                 die(node, "cannot index into type %d", container.type);
         }
+        return out; /* unreachable */
 }
 
 Var index_store(Node* node, Var container, int idx, Var val)
 {
+        ArrayList* a;
         switch (container.type) {
         case TYPE_STRING:
                 if (val.type != TYPE_INT)
@@ -548,7 +620,7 @@ Var index_store(Node* node, Var container, int idx, Var val)
                 string_set(container.data.s, idx, (char)val.data.i);
                 return val;
         case TYPE_ARRAY:
-                ArrayList* a = container.data.a;
+                a = container.data.a;
                 if (val.type != a->type)
                         die(node, "type mismatch: array holds %d but got %d", a->type, val.type);
                 a->items[idx] = val;
@@ -556,6 +628,8 @@ Var index_store(Node* node, Var container, int idx, Var val)
         default:
                 die(node, "cannot index assign into type %d", container.type);
         }
+
+        return val; /* unreachable */
 }
 
 Var do_binop(Node* at, BinOp op, Var a, Var b)
@@ -582,8 +656,6 @@ Var eval_binop(Node* node)
 {
         Var a;
         Var b;
-        VarType type;
-        BinOpFunc func;
         BinOp op = node->op;
 
         a = eval_expr(node->children[0]);
@@ -629,35 +701,47 @@ Var eval_idx(Node* node)
 
 Var load_lvalue(Node* L)
 {
+        Var* v;
+        Var container;
+        Var idxv;
+        int idx;
+
         switch (L->type) {
         case NODE_VAR:
-                Var* v = env_get(L->varname);
+                v = env_get(L->varname);
                 if (!v)
                         die(L, "undefined variable '%s'", L->varname);
                 return *v;
         case NODE_IDX:
-                Var container = eval_expr(L->children[0]);
-                Var idxv = eval_expr(L->children[1]);
-                int idx = var_to_idx(L, idxv);
+                container = eval_expr(L->children[0]);
+                idxv = eval_expr(L->children[1]);
+                idx = var_to_idx(L, idxv);
                 return index_load(L, container, idx);
         default:
                 die(L, "Left hand side is not assignable");
         }
+
+        return container; /* unreachable */
 }
 
 void assign_lvalue(Node* L, Var val)
 {
+        Var* v;
+        Var container;
+        Var idxv;
+        int idx;
+
         switch (L->type) {
         case NODE_VAR:
-                Var* v = env_get(L->varname);
+                v = env_get(L->varname);
                 if (!v)
                         die(L, "undefined variable '%s'", L->varname);
                 *v = val;
                 return;
         case NODE_IDX:
-                Var container = eval_expr(L->children[0]);
-                Var idxv = eval_expr(L->children[1]);
-                int idx = var_to_idx(L, idxv);
+                container = eval_expr(L->children[0]);
+                idxv = eval_expr(L->children[1]);
+                idx = var_to_idx(L, idxv);
                 index_store(L, container, idx, val);
                 return;
         default:
@@ -678,12 +762,92 @@ Var eval_incdec_expr(Node* node)
         assign_lvalue(L, next);
 
         return (is_prefix) ? next : old;
-
 }
 
 void eval_incdec_stmt(Node* node)
 {
         (void) eval_incdec_expr(node);
+}
+
+void eval_recdef(Node* node)
+{
+        unsigned int n;
+        unsigned int i;
+        const char** names;
+        Var* defs;
+        RecDef* rd;
+        Node* seq;
+
+        if (node->n_children > 0) {
+                seq = node->children[0];
+                n = seq->n_children;
+        }
+
+        names = malloc(sizeof(char*) * n);
+        defs = malloc(sizeof(Var) * n);
+
+        for (i = 0; i < n; i++) {
+                Var v;
+                Node* f = seq->children[i];
+                int has_init;
+
+                v.type = f->vartype;
+                names[i] = strdup(f->varname);
+
+                has_init = (f->n_children == 1 && f->children[0]->type != NODE_NOP);
+
+                if (has_init) {
+                        v = eval_expr(f->children[0]);
+                        v = implicit_convert(v, f->vartype);
+
+                        if (v.type != f->vartype) {
+                                die(node, "init expr type mismatch for '%s'", f->varname);
+                        }
+                }
+                else if (v.type == TYPE_STRING) {
+                        v.data.s = string_new("");
+                }
+                defs[i] = v;
+        }
+
+        rd = recdef_new(node->varname, names, defs, n);
+        recdef_register(rd);
+        for (i = 0; i < n; i++)
+                free((char*)names[i]);
+        free(names);
+        free(defs);
+}
+
+Var eval_fieldaccess(Node* node)
+{
+        Var container = eval_expr(node->children[0]);
+        RecInst* ri;
+
+        if (container.type != TYPE_REC)
+                die(node, "cannot access field on non-record, value");
+
+        ri = container.data.r;
+        return *rec_get_field(ri, node->varname);
+}
+
+Var eval_fieldassign_expr(Node* node)
+{
+        Var container = eval_expr(node->children[0]);
+        Var v = eval_expr(node->children[1]);
+        RecInst* ri;
+
+        if (container.type != TYPE_REC)
+                die(node, "cannot assign field on non-record, value");
+
+        ri = container.data.r;
+
+        rec_set_field(ri, node->varname, v);
+        return v;
+}
+
+void eval_fieldassign_stmt(Node* node)
+{
+        (void) eval_fieldassign_expr(node);
 }
 
 Var eval_expr(Node* node)
@@ -701,6 +865,8 @@ Var eval_expr(Node* node)
                 if (!found)
                         die(node, "undefined variable '%s'", node->varname);
                 return *found;
+        case NODE_FIELDACCESS:
+                return eval_fieldaccess(node);
         case NODE_NUM:
                 set_int(&v, node->ival);
                 return v;
@@ -724,6 +890,8 @@ Var eval_expr(Node* node)
                 return eval_assign_expr(node);
         case NODE_IDXASSIGN:
                 return eval_idxassign_expr(node);
+        case NODE_FIELDASSIGN:
+                return eval_fieldassign_expr(node);
         case NODE_NOT: {
                 Var inner = eval_expr(node->children[0]);
                 if (inner.type != TYPE_BOOL && inner.type != TYPE_INT) {
@@ -765,4 +933,5 @@ Var eval_expr(Node* node)
         default:
                 die(node, "unhandled expression type: %s", node->type);
         }
+        return v;
 }

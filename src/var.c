@@ -1,5 +1,7 @@
 #include "var.h"
 #include "arraylist.h"
+#include "util.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -38,6 +40,7 @@ Var implicit_convert(Var in, VarType target)
         }
 
         die(NULL, "cannot convert type %d to %d", in.type, target);
+        return in; /* unreachable */
 }
 
 VarType coerce(Var* a, Var* b)
@@ -137,6 +140,8 @@ float to_float(const Var* v)
         default:
                 die(NULL, "cannot cast to float\n");
         }
+
+        return 0.0f; /* unreachable */
 }
 
 float to_long(const Var* v)
@@ -153,11 +158,19 @@ float to_long(const Var* v)
         default:
                 die(NULL, "cannot cast to long\n");
         }
+
+        return 0.0f; /* unreachable */
 }
 
 void set_void(Var* v)
 {
         v->type = TYPE_VOID;
+}
+
+void set_rec(Var* v, RecInst* val)
+{
+        v->type = TYPE_REC;
+        v->data.r = val;
 }
 
 void set_int(Var* v, int val)
@@ -226,6 +239,8 @@ int as_bool(Var v)
         if (v.type == TYPE_INT) {
                 return !!(v.data.i);
         }
+
+        return 0; /* unreachable */
 }
 
 unsigned int as_uint(Var v)
