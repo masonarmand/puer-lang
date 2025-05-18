@@ -16,8 +16,11 @@ BUILD_DIR   = build
 
 USER_CS     = $(filter-out $(SRC)/parser.tab.c $(SRC)/lexer.yy.c,$(wildcard $(SRC)/*.c))
 
-.PHONY: all clean FORCE
+.PHONY: all debug clean FORCE
 all: $(EXEC)
+
+debug: CFLAGS += -g -O0
+debug: all
 
 FORCE:
 
