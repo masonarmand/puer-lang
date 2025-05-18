@@ -10,6 +10,7 @@ src/lexer.yy.c
 
 # Object files
 src/*.o
+*.o
 
 # Editor temp files
 *~
