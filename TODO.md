@@ -24,6 +24,7 @@ multi dimensional arrays.
 - [ ] some way to convert between data types e.g, `str` -> `int`
 - [X] functions with return types and args
 - [X] structs/records
+- [ ] Ability to initialize a record with comma separated field values surrounded by `{ }`, similar to the array initializer.
 
 ## stdlib, IO
 
