@@ -62,6 +62,7 @@ void builtin_clear(void)
         Builtin* tmp;
         HASH_ITER(hh, builtin_table, cur, tmp) {
                 HASH_DEL(builtin_table, cur);
+                free(cur->param_types);
                 free((char*)cur->name);
                 free(cur);
         }
