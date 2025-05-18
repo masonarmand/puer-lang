@@ -566,7 +566,7 @@ Var eval_arraylit(Node* node)
 
 int var_to_idx(Node* node, Var v)
 {
-        int out;
+        int out = 0;
         switch (v.type) {
         case TYPE_INT:
                 out = v.data.i;
@@ -705,6 +705,7 @@ Var load_lvalue(Node* L)
         Var container;
         Var idxv;
         int idx;
+        Var dummy = { 0 };
 
         switch (L->type) {
         case NODE_VAR:
@@ -721,7 +722,7 @@ Var load_lvalue(Node* L)
                 die(L, "Left hand side is not assignable");
         }
 
-        return container; /* unreachable */
+        return dummy; /* unreachable */
 }
 
 void assign_lvalue(Node* L, Var val)
@@ -771,7 +772,7 @@ void eval_incdec_stmt(Node* node)
 
 void eval_recdef(Node* node)
 {
-        unsigned int n;
+        unsigned int n = 0;
         unsigned int i;
         const char** names;
         Var* defs;
@@ -782,6 +783,9 @@ void eval_recdef(Node* node)
                 seq = node->children[0];
                 n = seq->n_children;
         }
+
+        if (n == 0)
+                die(node, "record definition must have at least 1 field");
 
         names = malloc(sizeof(char*) * n);
         defs = malloc(sizeof(Var) * n);

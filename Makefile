@@ -8,7 +8,7 @@ NOWARN      = -w
 CC          = gcc
 INCDIRS     = include src deps
 CPPFLAGS    = $(addprefix -I,$(INCDIRS))
-WARN_CFLAGS = -std=c89 -D_POSIX_C_SOURCE=200809L $(WARNINGS)
+CFLAGS      = -O2 -std=c89 -D_POSIX_C_SOURCE=200809L $(WARNINGS)
 LDFLAGS     = -lfl
 EXEC        = puer
 SRC         = src
@@ -32,7 +32,7 @@ $(EXEC): FORCE $(SRC)/parser.y $(SRC)/lexer.l $(USER_CS)
 
 	@for src in $(USER_CS); do \
 	  obj=$(BUILD_DIR)/$$(basename $$src .c).o; \
-	  $(CC) $(WARN_CFLAGS) $(CPPFLAGS) -c $$src -o $$obj; \
+	  $(CC) $(CFLAGS) $(CPPFLAGS) -c $$src -o $$obj; \
 	done
 
 	$(CC) $(BUILD_DIR)/*.o $(LDFLAGS) -o $(EXEC)
