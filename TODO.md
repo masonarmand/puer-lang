@@ -25,6 +25,7 @@ multi dimensional arrays.
 - [X] functions with return types and args
 - [X] structs/records
 - [ ] Ability to initialize a record with comma separated field values surrounded by `{ }`, similar to the array initializer.
+- [ ] Strict Record return types instead of just returning `TYPE_REC`.
 
 ## stdlib, IO
 
