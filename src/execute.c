@@ -422,7 +422,6 @@ Var eval_funccall(Node* node)
 
                 if (param->vartype == TYPE_REC) {
                         RecInst* ri = arg_val.data.r;
-                        Var* orig;
 
                         if (strcmp(ri->def->name, param->recname) != 0) {
                                 die(node, "function '%s' argument %d: expected record '%s', got '%s'",
@@ -432,10 +431,12 @@ Var eval_funccall(Node* node)
                                         ri->def->name
                                 );
                         }
+                }
 
+                if (param->vartype == TYPE_ARRAY || param->vartype == TYPE_REC) {
+                        Var* orig;
                         if (arg_expr->type != NODE_VAR)
-                                die(node, "function '%s': record argument must be a variable", node->varname);
-
+                                die(node, "array argument must be a variable");
                         orig = env_get(arg_expr->varname);
                         if (!orig)
                                 die(node, "undefined variable '%s'", arg_expr->varname);
