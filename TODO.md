@@ -23,7 +23,7 @@ multi dimensional arrays.
     - [X] `+=`, `-=`, `/=`, `*=`, `%=`
 - [ ] some way to convert between data types e.g, `str` -> `int`
 - [X] functions with return types and args
-- [ ] structs/records
+- [X] structs/records
 
 ## stdlib, IO
 
