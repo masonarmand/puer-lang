@@ -6,6 +6,7 @@
 #include "builtin.h"
 #include "arraylist.h"
 #include "rec.h"
+#include "gc_tri.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -157,7 +158,7 @@ void eval_seq(Node* node)
         unsigned int i;
         for (i = 0; i < node->n_children; i++) {
                 eval(node->children[i]);
-                /*gc_collect_step();*/
+                gc_collect_step();
                 /*gc_collect_full();*/
         }
 }
