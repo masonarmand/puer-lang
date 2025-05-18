@@ -54,6 +54,11 @@ typedef enum {
         NODE_ARRAYLIT,
         NODE_ARRAYDECL,
 
+        NODE_RECDEF,
+        NODE_FIELDDECL,
+        NODE_FIELDASSIGN,
+        NODE_FIELDACCESS,
+
         /* control flow */
         NODE_IF,
         NODE_IFELSE,
@@ -94,6 +99,7 @@ typedef struct Node {
         int ival; /* for NODE_NUM */
         float fval; /* for NODE_FLOAT */
 
+        char* recname; /* for record vardecl */
         char* varname; /* function names, variable names, identifiers */
         VarType vartype; /* VARDECL, PARAM, FUNCDECL type */
 } Node;

@@ -28,6 +28,7 @@ void yyerror(const char* s);
 /* globals */
 /* root of ast (abstract syntax tree) */
 Node* root;
+char* g_recname;
 %}
 
 %union {
@@ -40,6 +41,7 @@ Node* root;
 }
 
 %right '=' ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
+%right '.'
 %nonassoc RET
 %right ARROW
 %left OR
@@ -78,6 +80,7 @@ Node* root;
 %token IF ELSE FOR WHILE
 %token BREAK CONTINUE
 %token DEF RETURN ARROW ','
+%token REC
 %token PRINT
 %token PRINTLN
 
@@ -86,7 +89,8 @@ Node* root;
 %type <node> control_stmt opt_stmt opt_expr stmt_end top_stmt_end
 %type <node> array_items dims opt_init
 %type <node> function_def param_list arg_list
-%type <node> varassign
+%type <node> vardecl varassign
+%type <node> rec_def rec_field_list rec_field
 %type <vartype> opt_return
 
 
@@ -102,6 +106,7 @@ top_code
 
 top_stmt_end
     : function_def                         { $$ = $1; }
+    | rec_def                              { $$ = $1; }
     | stmt_end                             { $$ = $1; }
     ;
 
@@ -123,14 +128,11 @@ stmt_end
 stmt
     : PRINT '(' arg_list ')'               { $$ = node(NODE_PRINT, @$, 1, $3); }
     | PRINTLN '(' arg_list ')'             { $$ = node(NODE_PRINTLN, @$, 1, $3); }
-
-    | TYPE dims IDENT opt_init             { $$ = node(NODE_ARRAYDECL, @$, 2, $2, $4); setvar($$, $1, $3); }
-    | TYPE IDENT                           { $$ = node(NODE_VARDECL, @$, 0); setvar($$, $1, $2); }
-    | TYPE IDENT '=' expr                  { $$ = node(NODE_VARDECL, @$, 1, $4); setvar($$, $1, $2); }
     | BREAK                                { $$ = node(NODE_BREAK, @$, 0); }
     | CONTINUE                             { $$ = node(NODE_CONTINUE, @$, 0); }
     | RETURN expr                          { $$ = node(NODE_RETURN, @$, 1, $2); }
     | RETURN                               { $$ = node(NODE_RETURN, @$, 0); settype($$, TYPE_VOID); }
+    | vardecl                              { $$ = $1; }
     | expr                                 { $$ = $1; }
     ;
 
@@ -142,6 +144,7 @@ expr
     | IDENT                                { $$ = node(NODE_VAR, @1, 0); setname($$, $1); }
     | STRING                               { $$ = node(NODE_STRING, @1, 0); setname($$, $1); }
     | CHAR                                 { $$ = node(NODE_CHAR, @1, 0); $$->ival = $1; }
+    | expr '.' IDENT         %prec POSTFIX { $$ = node(NODE_FIELDACCESS, @$, 1, $1); setname($$, $3); }
     | expr LT expr                         { $$ = node_binop(OP_LT, @$, $1, $3); }
     | expr GT expr                         { $$ = node_binop(OP_GT, @$, $1, $3); }
     | expr LE expr                         { $$ = node_binop(OP_LE, @$, $1, $3); }
@@ -177,6 +180,33 @@ expr
     | '[' ']'                              { $$ = node(NODE_ARRAYLIT, @$, 0); }
     | '[' array_items ']'                  { $$ = $2; }
     | varassign                            { $$ = $1; }
+    ;
+
+vardecl
+    : TYPE dims IDENT opt_init        { $$ = node(NODE_ARRAYDECL, @$, 2, $2, $4); setvar($$, $1, $3); }
+    | TYPE IDENT opt_init             {
+        $$ = node(NODE_VARDECL, @$, 1, $3);
+        setvar($$, $1, $2);
+        if ($1 == TYPE_REC)
+                $$->recname = g_recname;
+    }
+    ;
+
+rec_def
+    : REC IDENT '{' rec_field_list '}' ';' {
+        $$ = node(NODE_RECDEF, @$, 1, $4);
+        setname($$, $2);
+        recname_register($2);
+    }
+    ;
+
+rec_field_list
+    : /* empty */                          { $$ = node(NODE_SEQ, @$, 0); }
+    | rec_field_list rec_field             { $$ = node_append($1, $2); }
+    ;
+
+rec_field
+    : vardecl ';'                          { $$ = $1; }
     ;
 
 function_def
@@ -232,8 +262,9 @@ dims
     ;
 
 varassign
-    : IDENT '=' expr %prec '='             { $$ = node(NODE_ASSIGN, @$, 1, $3); setname($$, $1); }
+    : IDENT '=' expr             %prec '=' { $$ = node(NODE_ASSIGN, @$, 1, $3); setname($$, $1); }
     | expr '[' expr ']' '=' expr %prec '=' { $$ = node(NODE_IDXASSIGN, @$, 3, $1, $3, $6); }
+    | expr '.' IDENT '=' expr    %prec '=' { $$ = node(NODE_FIELDASSIGN, @$, 2, $1, $5); setname($$, $3); }
     ;
 
 array_items

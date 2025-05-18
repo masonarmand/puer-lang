@@ -5,7 +5,10 @@
  */
 %{
 #include "parser.tab.h"
+#include "rec.h"
 #include <stdio.h>
+
+extern char* g_recname;
 
 /*
  * function for updating line number and column in parser
@@ -119,10 +122,23 @@ int yycolumn = 1;
 "float"                  { yylval.vartype = TYPE_FLOAT; return TYPE; }
 "str"                    { yylval.vartype = TYPE_STRING; return TYPE; }
 
+"rec"                    return REC;
+
 "true"                   { yylval.bval = 1; return TRUE; }
 "false"                  { yylval.bval = 0; return FALSE; }
 
-[a-zA-Z_][a-zA-Z0-9_]*   { yylval.ident = strdup(yytext); return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]*   {
+        if (is_rec_name(yytext)) {
+                yylval.vartype = TYPE_REC;
+                g_recname = strdup(yytext);
+                return TYPE;
+        }
+        else {
+                yylval.ident = strdup(yytext);
+                return IDENT;
+        }
+
+}
 
 
 .                        return *yytext;

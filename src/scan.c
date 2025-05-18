@@ -57,3 +57,8 @@ void scan_scope(void* payload, GC_MarkFn mark)
                 mark(cur);
         }
 }
+
+void scan_rec(void* payload, GC_MarkFn mark)
+{
+
+}

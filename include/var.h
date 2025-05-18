@@ -9,6 +9,7 @@
 #include "puerstring.h"
 
 typedef struct ArrayList ArrayList;
+typedef struct RecInst RecInst;
 
 typedef enum VarType {
         TYPE_INT,
@@ -19,6 +20,7 @@ typedef enum VarType {
         TYPE_STRING,
         TYPE_ARRAY,
         TYPE_VOID,
+        TYPE_REC,
         TYPE_ANY
 } VarType;
 
@@ -33,6 +35,7 @@ typedef struct Var {
                 float f;
                 String* s;
                 ArrayList* a;
+                RecInst* r;
         } data;
 
         int is_const;
@@ -54,6 +57,7 @@ float to_float(const Var* v);
 float to_long(const Var* v);
 void set_bool(Var* v, int val);
 void set_int(Var* v, int val);
+void set_rec(Var* v, RecInst* val);
 void set_uint(Var* v, unsigned int val);
 void set_float(Var* v, float val);
 void set_long(Var* v, long val);

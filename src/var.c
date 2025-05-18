@@ -160,6 +160,12 @@ void set_void(Var* v)
         v->type = TYPE_VOID;
 }
 
+void set_rec(Var* v, RecInst* val)
+{
+        v->type = TYPE_REC;
+        v->data.r = val;
+}
+
 void set_int(Var* v, int val)
 {
         v->type = TYPE_INT;

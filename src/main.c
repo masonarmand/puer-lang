@@ -28,6 +28,8 @@ int main(int argc, char** argv)
 
         if (!yyparse()) {
                 /*print_ast(root, 0);*/
+                recname_clear();
+
                 init_handlers();
                 gc_init();
                 init_puerlib();
@@ -35,6 +37,7 @@ int main(int argc, char** argv)
 
                 /* cleanup */
                 free_ast(root);
+                recdef_clear();
                 env_clear();
                 builtin_clear();
                 func_clear();

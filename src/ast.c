@@ -36,6 +36,10 @@ static const char* node_type_names[] = {
         [NODE_IDXASSIGN]= "NODE_IDXASSIGN",
         [NODE_ARRAYLIT] = "NODE_ARRAYLIT",
         [NODE_ARRAYDECL]= "NODE_ARRAYDECL",
+        [NODE_RECDEF]   = "NODE_RECDEF",
+        [NODE_FIELDDECL]= "NODE_FIELDDECL",
+        [NODE_FIELDASSIGN] = "NODE_FIELDASSIGN",
+        [NODE_FIELDASSIGN] = "NODE_FIELDACCESS"
 };
 
 static const char* node_type_to_str(NodeType t)
@@ -171,9 +175,10 @@ void free_ast(Node* node)
 
         free(node->children);
 
-        if (node->varname) {
+        if (node->varname)
                 free(node->varname);
-        }
+        if (node->recname)
+                free(node->recname);
 
         free(node);
 }
