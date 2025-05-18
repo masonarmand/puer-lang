@@ -57,7 +57,7 @@ void check_arr_bounds(ArrayList* a, int index)
                 die(NULL, "index out of bounds for index: %d in array", index);
 }
 
-Var build_zero_array_1d(VarType base, int size)
+Var build_zero_array_1d(VarType base, const char* recname, int size)
 {
         ArrayList* a = arraylist_new(base, size);
         Var out;
@@ -82,6 +82,9 @@ Var build_zero_array_1d(VarType base, int size)
                 case TYPE_STRING:
                         elt.data.s = string_new("");
                         break;
+                case TYPE_REC:
+                        elt.data.r = rec_new(recname);
+                        break;
                 default:
                         die(NULL, "unsupported array base type %d", base);
                 }
@@ -92,18 +95,18 @@ Var build_zero_array_1d(VarType base, int size)
         return out;
 }
 
-static Var build_zero_array_nd(VarType base, int* dims, int ndims)
+static Var build_zero_array_nd(VarType base, const char* recname, int* dims, int ndims)
 {
         ArrayList* a;
         Var out;
         int i;
 
         if (ndims == 1)
-                return build_zero_array_1d(base, dims[0]);
+                return build_zero_array_1d(base, recname, dims[0]);
 
         a = arraylist_new(TYPE_ARRAY, dims[0]);
         for (i = 0; i < dims[0]; i++) {
-                Var child = build_zero_array_nd(base, dims + 1, ndims - 1);
+                Var child = build_zero_array_nd(base, recname, dims + 1, ndims - 1);
                 arraylist_push(a, child);
         }
 
@@ -111,9 +114,9 @@ static Var build_zero_array_nd(VarType base, int* dims, int ndims)
         return out;
 }
 
-Var build_zero_array(VarType base, int* dims, int ndims)
+Var build_zero_array(VarType base, const char* recname, int* dims, int ndims)
 {
         if (ndims <= 0)
-                return build_zero_array_1d(base, 0);
-        return build_zero_array_nd(base, dims, ndims);
+                return build_zero_array_1d(base, recname, 0);
+        return build_zero_array_nd(base, recname, dims, ndims);
 }

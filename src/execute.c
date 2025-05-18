@@ -514,7 +514,7 @@ void eval_arraydecl(Node* node)
                                 sizes[i] = v.data.i;
                         }
                 }
-                value = build_zero_array(node->vartype, sizes, ndims);
+                value = build_zero_array(node->vartype, node->recname, sizes, ndims);
                 free(sizes);
         }
         env_set(node->varname, value);
