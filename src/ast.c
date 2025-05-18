@@ -39,7 +39,7 @@ static const char* node_type_names[] = {
         [NODE_RECDEF]   = "NODE_RECDEF",
         [NODE_FIELDDECL]= "NODE_FIELDDECL",
         [NODE_FIELDASSIGN] = "NODE_FIELDASSIGN",
-        [NODE_FIELDASSIGN] = "NODE_FIELDACCESS"
+        [NODE_FIELDACCESS] = "NODE_FIELDACCESS",
 };
 
 static const char* node_type_to_str(NodeType t)
@@ -60,6 +60,7 @@ Node* node(NodeType type, YYLTYPE loc, int n_children, ...)
         n->children = malloc(sizeof(Node*) * n_children);
         n->vartype = TYPE_VOID;
         n->varname = NULL;
+        n->recname = NULL;
         n->ndims = 0;
         n->lineno = loc.first_line;
         n->column = loc.first_column;
@@ -123,6 +124,10 @@ Node* node_param(VarType type, char* varname, YYLTYPE loc)
         Node* d = node(NODE_VARDECL, loc, 0);
         d->varname = varname;
         d->vartype = type;
+
+        if (type == TYPE_REC)
+                d->recname = g_recname;
+
         return node(NODE_SEQ, loc, 1, d);
 }
 
@@ -131,6 +136,10 @@ Node* node_param_append(Node* list, VarType type, char* varname, YYLTYPE loc)
         Node* param = node(NODE_VARDECL, loc, 0);
         param->varname = varname;
         param->vartype = type;
+
+        if (type == TYPE_REC)
+                param->recname = g_recname;
+
         return node_append(list, param);
 }
 

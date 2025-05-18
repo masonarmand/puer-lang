@@ -106,6 +106,8 @@ typedef struct Node {
 
 #include "parser.tab.h"
 
+extern char* g_recname;
+
 /* ast.c */
 Node* node(NodeType type, YYLTYPE loc, int n_children, ...);
 Node* node_binop(BinOp op, YYLTYPE loc, Node* lhs, Node* rhs);

@@ -415,11 +415,42 @@ Var eval_funccall(Node* node)
                 Node* arg_expr = node->children[0]->children[i];
                 Var arg_val = eval_expr(arg_expr);
 
+                if (env_get(param->varname))
+                        die(node, "variable '%s' already declared elsewhere", param->varname);
                 if (arg_val.type != param->vartype) {
                         die(node, "function '%s' argument %d: expected type %d, got %d",
-                                node->varname, i + 1, param->vartype, arg_val.type);
+                                node->varname,
+                                i + 1,
+                                param->vartype,
+                                arg_val.type
+                        );
                 }
-                env_set(param->varname, arg_val);
+
+                if (param->vartype == TYPE_REC) {
+                        RecInst* ri = arg_val.data.r;
+                        Var* orig;
+
+                        if (strcmp(ri->def->name, param->recname) != 0) {
+                                die(node, "function '%s' argument %d: expected record '%s', got '%s'",
+                                        node->varname,
+                                        i + 1,
+                                        param->recname,
+                                        ri->def->name
+                                );
+                        }
+
+                        if (arg_expr->type != NODE_VAR)
+                                die(node, "function '%s': record argument must be a variable", node->varname);
+
+                        orig = env_get(arg_expr->varname);
+                        if (!orig)
+                                die(node, "undefined variable '%s'", arg_expr->varname);
+                        env_set_ptr(param->varname, orig);
+                }
+                else {
+                        env_set(param->varname, arg_val);
+                }
+
         }
 
         sig = eval_with_ctrl(body);
@@ -434,7 +465,7 @@ Var eval_funccall(Node* node)
         else {
                 if (func->vartype != TYPE_VOID)
                         die(node, "function '%s': missing return value", node->varname);
-                set_void(g_retval);
+                set_void(&g_retval);
         }
 
         env_pop();
@@ -737,11 +768,14 @@ void eval_recdef(Node* node)
         for (i = 0; i < n; i++) {
                 Var v;
                 Node* f = seq->children[i];
+                int has_init;
 
                 v.type = f->vartype;
                 names[i] = strdup(f->varname);
 
-                if (f->n_children > 0) {
+                has_init = (f->n_children == 1 && f->children[0]->type != NODE_NOP);
+
+                if (has_init) {
                         v = eval_expr(f->children[0]);
                         v = implicit_convert(v, f->vartype);
 
@@ -757,6 +791,8 @@ void eval_recdef(Node* node)
 
         rd = recdef_new(node->varname, names, defs, n);
         recdef_register(rd);
+        for (i = 0; i < n; i++)
+                free((char*)names[i]);
         free(names);
         free(defs);
 }

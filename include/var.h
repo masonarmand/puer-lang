@@ -41,12 +41,12 @@ typedef struct Var {
         int is_const;
 } Var;
 
-typedef struct ArrayList {
+struct ArrayList {
         VarType type;
         Var* items;
         int size;
         int capacity;
-} ArrayList;
+};
 
 Var var_clone(const Var* src);
 Var implicit_convert(Var in, VarType target);
@@ -55,6 +55,7 @@ VarType common_type(VarType a, VarType b);
 void cast_to(Var* v, VarType target);
 float to_float(const Var* v);
 float to_long(const Var* v);
+void set_void(Var* v);
 void set_bool(Var* v, int val);
 void set_int(Var* v, int val);
 void set_rec(Var* v, RecInst* val);

@@ -8,7 +8,7 @@ CC = gcc
 # CFLAGS = -std=c89 -D_POSIX_C_SOURCE=200809L -Iinclude $(WARNINGS)
 INCDIRS = include src
 CPPFLAGS = $(addprefix -I,$(INCDIRS))
-CFLAGS = -g -std=c89 -D_POSIX_C_SOURCE=200809L
+CFLAGS = -g -O0 -std=c89 -D_POSIX_C_SOURCE=200809L
 LDFLAGS = -lfl
 EXEC = puer
 
@@ -31,4 +31,4 @@ run:
 	./$(EXEC)
 
 clean:
-	rm -f $(EXEC) $(SRC)/parser.tab.* $(SRC)/lexer.yy.c $(SRC)/parser.output
+	rm -f $(EXEC) $(SRC)/parser.tab.* $(SRC)/lexer.yy.c $(SRC)/parser.output $(SRC)/*.o

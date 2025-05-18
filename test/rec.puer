@@ -1,20 +1,14 @@
 rec Point {
         int x = 10;
-        int y = 10;
+        int y = 200;
 };
 
-def set_point(Point p)
+def set_point(Point point)
 {
-        p.x = 0;
-        p.y = 0;
+        point.x = 0;
+        point.y = 0;
 }
 
-
 Point p;
-println(p);
-p.x = 20;
-println(p);
 set_point(p);
-println(p);
-
 println(p.x, p.y);

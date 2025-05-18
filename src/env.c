@@ -45,7 +45,9 @@ Var* env_get(const char* name)
         while (scope) {
                 VarEntry* entry;
                 HASH_FIND_STR(scope->table, name, entry);
-                if (entry)
+                if (entry && entry->is_ptr)
+                        return entry->alias;
+                else if (entry)
                         return &entry->val;
                 scope = scope->next;
         }
@@ -64,9 +66,28 @@ void env_set(const char* name, Var val)
         if (!entry) {
                 entry = gc_alloc(sizeof(VarEntry), scan_varentry);
                 entry->name = strdup(name);
+                entry->is_ptr = 0;
                 HASH_ADD_KEYPTR(hh, env_stack->table, entry->name, strlen(entry->name), entry);
         }
         entry->val = val;
+}
+
+void env_set_ptr(const char* name, Var* target)
+{
+        VarEntry* entry;
+
+        if (!env_stack) {
+                env_push();
+        }
+
+        HASH_FIND_STR(env_stack->table, name, entry);
+        if (!entry) {
+                entry = gc_alloc(sizeof(VarEntry), scan_varentry);
+                entry->name = strdup(name);
+                entry->is_ptr = 1;
+                HASH_ADD_KEYPTR(hh, env_stack->table, entry->name, strlen(entry->name), entry);
+        }
+        entry->alias = target;
 }
 
 void env_clear()

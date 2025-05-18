@@ -37,11 +37,11 @@ int main(int argc, char** argv)
 
                 /* cleanup */
                 free_ast(root);
-                recdef_clear();
                 env_clear();
                 builtin_clear();
                 func_clear();
                 gc_collect_full();
+                recdef_clear();
         }
         fclose(yyin);
         yylex_destroy();

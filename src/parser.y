@@ -28,7 +28,7 @@ void yyerror(const char* s);
 /* globals */
 /* root of ast (abstract syntax tree) */
 Node* root;
-char* g_recname;
+char* g_recname = NULL;
 %}
 
 %union {

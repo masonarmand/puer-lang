@@ -2,11 +2,35 @@
 #include "env.h"
 #include "puerstring.h"
 #include "arraylist.h"
+#include "rec.h"
 #include "var.h"
 #include "ast.h"
 
 #include "uthash.h"
 
+
+void mark_var(const Var* v, GC_MarkFn mark)
+{
+        if (!v)
+                return;
+
+        switch(v->type) {
+        case TYPE_STRING:
+                if (v->data.s)
+                        mark(v->data.s);
+                break;
+        case TYPE_ARRAY:
+                if (v->data.a)
+                        mark(v->data.a);
+                break;
+        case TYPE_REC:
+                if (v->data.r)
+                        mark(v->data.r);
+                break;
+        default:
+                break;
+        }
+}
 
 void scan_raw(void* payload, GC_MarkFn mark)
 {
@@ -27,24 +51,15 @@ void scan_arraylist(void* payload, GC_MarkFn mark)
         int i;
         if (a->items)
                 mark(a->items);
-        for (i = 0; i < a->size; i++) {
-                Var* v = &a->items[i];
-                if (v->type == TYPE_STRING && v->data.s)
-                        mark(v->data.s);
-                if (v->type == TYPE_ARRAY  && v->data.a)
-                        mark(v->data.a);
-        }
+
+        for (i = 0; i < a->size; i++)
+                mark_var(&a->items[i], mark);
 }
 
 void scan_varentry(void* payload, GC_MarkFn mark)
 {
         VarEntry* e = payload;
-        Var* v = &e->val;
-
-        if (v->type == TYPE_STRING && v->data.s)
-                mark(v->data.s);
-        if (v->type == TYPE_ARRAY  && v->data.a)
-                mark(v->data.a);
+        mark_var(&e->val, mark);
 }
 
 void scan_scope(void* payload, GC_MarkFn mark)
@@ -60,5 +75,13 @@ void scan_scope(void* payload, GC_MarkFn mark)
 
 void scan_rec(void* payload, GC_MarkFn mark)
 {
+        RecInst* ri = payload;
+        unsigned int i;
+
+        if (ri->fields)
+                mark(ri->fields);
+
+        for (i = 0; i < ri->def->n_fields; i++)
+                mark_var(&ri->fields[i], mark);
 
 }

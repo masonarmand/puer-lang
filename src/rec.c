@@ -19,7 +19,7 @@ void recdef_free(RecDef* rd);
 RecDef* recdef_new(const char* name, const char** field_names, const Var* fields, unsigned int n_fields)
 {
         unsigned int i;
-        RecDef* rd = malloc(sizeof(RecDef));
+        RecDef* rd = calloc(1, sizeof(RecDef));
         rd->name = strdup(name);
         rd->n_fields = n_fields;
         rd->fields = malloc(sizeof(Var) * n_fields);
