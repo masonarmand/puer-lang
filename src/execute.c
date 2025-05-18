@@ -450,8 +450,9 @@ Var eval_funccall(Node* node)
                         die(node, "function '%s': return type mismatch (expected %d, got %d)",
                                 node->varname, func->vartype, g_retval.type);
                 }
-                if (func->vartype == TYPE_ARRAY || func->vartype == TYPE_STRING)
+                if (func->vartype == TYPE_ARRAY || func->vartype == TYPE_STRING || func->vartype == TYPE_REC) {
                         g_retval = var_clone(&g_retval);
+                }
         }
         else {
                 if (func->vartype != TYPE_VOID)

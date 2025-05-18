@@ -19,6 +19,15 @@ def set_line(Line line, Point a, Point b)
         line.a = a;
         line.b = b;
 }
+
+def make_point(int x, int y) -> Point
+{
+        Point p;
+        p.x = x;
+        p.y = y;
+        return p;
+}
+
 Line l;
 Point p1;
 Point p2;
@@ -31,3 +40,6 @@ set_line(l, p1, p2);
 println(l);
 p1.x = 200000;
 println(l);
+
+Point p = make_point(5, 5);
+println(p);
