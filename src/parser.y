@@ -89,7 +89,7 @@ char* g_recname = NULL;
 %type <node> puer top_code code block stmt expr
 %type <node> control_stmt opt_stmt opt_expr stmt_end top_stmt_end
 %type <node> array_items dims opt_init
-%type <node> function_def param_list arg_list
+%type <node> function_def param param_list arg_list
 %type <node> vardecl varassign
 %type <node> rec_def rec_field_list rec_field
 %type <vartype> opt_return
@@ -220,9 +220,17 @@ function_def
 
 param_list
     : /* empty */                          { $$ = node(NODE_SEQ, @$, 0); }
-    | TYPE IDENT                           { $$ = node_param($1, $2, @$); }
-    | param_list ',' TYPE IDENT            { $$ = node_param_append($1, $3, $4, @$); }
+    | param                                { $$ = $1; }
+    | param_list ',' param                 { $$ = node_append($1, $3); }
     ;
+
+param
+    : TYPE IDENT                           { $$ = node_param($1, $2, @$); }
+    | TYPE dims IDENT {
+        Node* arrdecl = node(NODE_ARRAYDECL, @$, 2, $2, node(NODE_NOP, @$, 0));
+        setvar(arrdecl, TYPE_ARRAY, $3);
+        $$ = node_param_append(arrdecl, $1, $3, @$);
+    }
 
 opt_return
     : /* empty */                          { $$ = TYPE_VOID; }
