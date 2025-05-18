@@ -23,6 +23,8 @@ struct RecInst {
         Var* fields;
 };
 
+extern RecDef* recdefs;
+
 RecDef* recdef_new(const char* name, const char** field_names, const Var* fields, unsigned int n_fields);
 RecDef* recdef_find(const char* name);
 RecInst* rec_new(const char* recdef_name);

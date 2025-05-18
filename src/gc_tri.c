@@ -5,10 +5,12 @@
 #include "gc_tri.h"
 #include "util.h"
 #include "env.h"
-#include <stdlib.h>
 #include "scan.h"
 
-#define GC_SWEEP_SLICE_SIZE  20
+#include <stdlib.h>
+#include <limits.h>
+
+#define GC_DEFAULT_SLICE_SIZE 100000
 
 #define HEADER_OF(p) ( (GC_Header*)( (p) ) - 1 )
 #define PAYLOAD_OF(h) ( (void*)( (h) + 1 ) )
@@ -30,6 +32,7 @@ static GC_Header* gray_head = NULL;
 /* mark bit flips each gc cycle */
 static int current_mark_bit = 0;
 static int gc_cycle_in_progress = 0;
+static int gc_slice_size = GC_DEFAULT_SLICE_SIZE;
 
 static void mark_obj(void* payload)
 {
@@ -58,6 +61,7 @@ static void gc_begin_cycle(void)
         gray_head = NULL;
         gc_cycle_in_progress = 1;
         mark_obj(env_stack);
+        mark_obj(recdefs);
 }
 
 /* public gc api */
@@ -178,7 +182,7 @@ int gc_collect_step(void)
 
         if (gc_step())
                 return 1;
-        if (gc_sweep_slice(GC_SWEEP_SLICE_SIZE) > 0)
+        if (gc_sweep_slice(gc_slice_size) > 0)
                 return 1;
 
         gc_cycle_in_progress = 0;
@@ -187,6 +191,7 @@ int gc_collect_step(void)
 
 void gc_collect_full(void)
 {
+        gc_slice_size = 0;
         /* finish previous cycle */
         while (gc_collect_step()) {}
 
@@ -194,4 +199,5 @@ void gc_collect_full(void)
         while (gc_step()) {}
         gc_sweep_all();
         gc_cycle_in_progress = 0;
+        gc_slice_size = GC_DEFAULT_SLICE_SIZE;
 }

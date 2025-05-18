@@ -44,8 +44,9 @@ int main(int argc, char** argv)
                 env_clear();
                 builtin_clear();
                 func_clear();
-                gc_collect_full();
                 recdef_clear();
+
+                gc_collect_full();
         }
         fclose(yyin);
         yylex_destroy();

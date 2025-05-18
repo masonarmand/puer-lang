@@ -12,17 +12,17 @@ typedef struct RecName {
 } RecName;
 
 static RecName* recnames = NULL;
-static RecDef* recdefs = NULL;
+RecDef* recdefs = NULL;
 
 void recdef_free(RecDef* rd);
 
 RecDef* recdef_new(const char* name, const char** field_names, const Var* fields, unsigned int n_fields)
 {
         unsigned int i;
-        RecDef* rd = calloc(1, sizeof(RecDef));
+        RecDef* rd = gc_alloc(sizeof(RecDef), scan_recdef);
         rd->name = strdup(name);
         rd->n_fields = n_fields;
-        rd->fields = malloc(sizeof(Var) * n_fields);
+        rd->fields = gc_alloc(sizeof(Var) * n_fields, scan_raw);
         rd->index_map = NULL;
 
         for (i = 0; i < n_fields; i++) {
@@ -71,9 +71,9 @@ void recdef_free(RecDef* rd)
                 free(fi);
         }
 
-        free(rd->fields);
+        /*free(rd->fields);*/
         free(rd->name);
-        free(rd);
+        /*free(rd);*/
 }
 
 RecInst* rec_new(const char* recdef_name)

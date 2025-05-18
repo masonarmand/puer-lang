@@ -85,3 +85,16 @@ void scan_rec(void* payload, GC_MarkFn mark)
                 mark_var(&ri->fields[i], mark);
 
 }
+
+void scan_recdef(void* payload, GC_MarkFn mark)
+{
+        RecDef* rd = payload;
+        unsigned int i;
+        if (!rd || !rd->fields)
+                return;
+
+        mark(rd->fields);
+
+        for (i = 0; i < rd->n_fields; i++)
+                mark_var(&rd->fields[i], mark);
+}

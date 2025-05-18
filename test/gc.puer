@@ -9,3 +9,32 @@ append(b, 20);
 int[] c;
 append(c, 10);
 append(c, 20);
+
+str hello = "hello";
+str world = "world";
+
+hello = world;
+hello = "abc";
+println(hello);
+println(world);
+
+rec Obj {
+        int x = 10;
+};
+
+Obj o1;
+Obj o2;
+
+o1.x = 50;
+
+o2 = o1;
+o2.x = 5;
+
+println(o1, o2);
+
+def strfunc()
+{
+        str string = "aaaaaaaaaaaaaa";
+}
+
+strfunc(); // string should be collected

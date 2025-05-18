@@ -408,8 +408,6 @@ Var eval_funccall(Node* node)
                 Node* arg_expr = node->children[0]->children[i];
                 Var arg_val = eval_expr(arg_expr);
 
-                if (env_get(param->varname))
-                        die(node, "variable '%s' already declared elsewhere", param->varname);
                 if (arg_val.type != param->vartype) {
                         die(node, "function '%s' argument %d: expected type %d, got %d",
                                 node->varname,
