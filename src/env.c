@@ -70,6 +70,7 @@ void env_set(const char* name, Var val)
                 HASH_ADD_KEYPTR(hh, env_stack->table, entry->name, strlen(entry->name), entry);
         }
         entry->val = val;
+        entry->alias = NULL;
 }
 
 void env_set_ptr(const char* name, Var* target)

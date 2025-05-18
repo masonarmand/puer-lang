@@ -59,7 +59,10 @@ void scan_arraylist(void* payload, GC_MarkFn mark)
 void scan_varentry(void* payload, GC_MarkFn mark)
 {
         VarEntry* e = payload;
-        mark_var(&e->val, mark);
+        if (e->alias)
+                mark_var(e->alias, mark);
+        else
+                mark_var(&e->val, mark);
 }
 
 void scan_scope(void* payload, GC_MarkFn mark)
