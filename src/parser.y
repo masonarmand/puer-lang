@@ -42,7 +42,6 @@ char* g_recname = NULL;
 }
 
 %right '=' ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN
-%right '.'
 %nonassoc RET
 %right ARROW
 %left OR
@@ -54,7 +53,7 @@ char* g_recname = NULL;
 
 %right INC DEC NOT UMINUS
 
-%nonassoc POSTFIX '[' ']' '(' ')'
+%nonassoc POSTFIX '[' ']' '(' ')' '.'
 
 %nonassoc IFX
 %nonassoc ELSE
