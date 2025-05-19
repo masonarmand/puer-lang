@@ -42,6 +42,7 @@ static const char* node_type_to_str(NodeType t)
         case NODE_FIELDDECL:   return "NODE_FIELDDECL";
         case NODE_FIELDASSIGN: return "NODE_FIELDASSIGN";
         case NODE_FIELDACCESS: return "NODE_FIELDACCESS";
+        case NODE_INCDEC:      return "NODE_INCDEC";
         default:               return "UNKNOWN_NODE";
         }
         return "UNKNOWN_NODE"; /* unreachable */
