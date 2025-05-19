@@ -61,6 +61,7 @@ int var_to_idx(Node* node, Var v);
 Var index_store(Node* node, Var container, int idx, Var val);
 Var index_load(Node* node, Var container, int idx);
 Var load_lvalue(Node* L);
+Var* lvalue_ptr(Node* L);
 void assign_lvalue(Node* L, Var val);
 Var init_var(Node* ctx, VarType type, Node* init_node, const char* recname);
 
@@ -259,7 +260,7 @@ void eval_vardecl(Node* node)
         Var* get;
         v.type = node->vartype;
 
-        if ((get = env_get(node->varname)))
+        if ((get = env_get_top(node->varname)))
                 die(node, "'%s' has already been declared as type: '%d'", node->varname, get->type);
 
         v = init_var(
@@ -353,7 +354,6 @@ void eval_funcdef(Node* node)
 {
         /*
         Node* plist = node->children[0];
-        Node* body  = node->children[1];
         int   pcount = plist->n_children;
         int i;
 
@@ -434,13 +434,8 @@ Var eval_funccall(Node* node)
                 }
 
                 if (param->vartype == TYPE_ARRAY || param->vartype == TYPE_REC) {
-                        Var* orig;
-                        if (arg_expr->type != NODE_VAR)
-                                die(node, "array argument must be a variable");
-                        orig = env_get(arg_expr->varname);
-                        if (!orig)
-                                die(node, "undefined variable '%s'", arg_expr->varname);
-                        env_set_ptr(param->varname, orig);
+                        Var* v = lvalue_ptr(arg_expr);
+                        env_set_ptr(param->varname, v);
                 }
                 else {
                         env_set(param->varname, arg_val);
@@ -466,6 +461,37 @@ Var eval_funccall(Node* node)
 
         env_pop();
         return g_retval;
+}
+
+Var* lvalue_ptr(Node* L)
+{
+        Var* v;
+        RecInst* ri;
+        Var container;
+        int idx;
+
+        switch(L->type) {
+        case NODE_VAR:
+                v = env_get(L->varname);
+                if (!v)
+                        die(L, "undefined variable '%s'", L->varname);
+                return v;
+        case NODE_IDX:
+                container = eval_expr(L->children[0]);
+                idx = var_to_idx(L, eval_expr(L->children[1]));
+                if (container.type != TYPE_ARRAY)
+                        die(L, "cannot index into type %d", container.type);
+                return &container.data.a->items[idx];
+        case NODE_FIELDACCESS:
+                container = eval_expr(L->children[0]);
+                if (container.type != TYPE_REC)
+                        die(L, "cannot access field on non-record");
+                ri = container.data.r;
+                return rec_get_field(ri, L->varname);
+        default:
+                die(L, "not an l-value");
+        }
+        return NULL; /* unreachable */
 }
 
 void eval_idxassign_stmt(Node* node)

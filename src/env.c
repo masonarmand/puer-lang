@@ -54,6 +54,22 @@ Var* env_get(const char* name)
         return NULL;
 }
 
+/* only search top level scope */
+Var* env_get_top(const char* name)
+{
+        VarEntry* entry;
+
+        if (!env_stack)
+                return NULL;
+
+        HASH_FIND_STR(env_stack->table, name, entry);
+        if (entry && entry->is_ptr)
+                return entry->alias;
+        else if (entry)
+                return &entry->val;
+        return NULL;
+}
+
 void env_set(const char* name, Var val)
 {
         VarEntry* entry;
