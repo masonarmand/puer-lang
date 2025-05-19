@@ -29,6 +29,7 @@ extern Scope* env_stack;
 void env_push(void);
 void env_pop(void);
 Var* env_get(const char* name);
+Var* env_get_top(const char* name);
 void env_set(const char* name, Var val);
 void env_set_ptr(const char* name, Var* target);
 void env_clear();
