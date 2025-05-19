@@ -118,28 +118,18 @@ Node* node_uminus(Node* n, YYLTYPE loc)
         return binop;
 }
 
-Node* node_param(VarType type, char* varname, YYLTYPE loc)
+Node* node_param(VarType type, int isarr, char* varname, YYLTYPE loc)
 {
-        Node* d = node(NODE_VARDECL, loc, 0);
+        NodeType ntype = (isarr) ? NODE_ARRAYDECL : NODE_VARDECL;
+        Node* d = node(ntype, loc, 0);
         d->varname = varname;
-        d->vartype = type;
+        /*d->vartype = type;*/
+        d->vartype = (isarr) ? TYPE_ARRAY : type;
 
         if (type == TYPE_REC)
                 d->recname = g_recname;
 
         return node(NODE_SEQ, loc, 1, d);
-}
-
-Node* node_param_append(Node* list, VarType type, char* varname, YYLTYPE loc)
-{
-        Node* param = node(NODE_VARDECL, loc, 0);
-        param->varname = varname;
-        param->vartype = type;
-
-        if (type == TYPE_REC)
-                param->recname = g_recname;
-
-        return node_append(list, param);
 }
 
 Node* node_append(Node* list, Node* child)

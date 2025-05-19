@@ -225,12 +225,9 @@ param_list
     ;
 
 param
-    : TYPE IDENT                           { $$ = node_param($1, $2, @$); }
-    | TYPE dims IDENT {
-        Node* arrdecl = node(NODE_ARRAYDECL, @$, 2, $2, node(NODE_NOP, @$, 0));
-        setvar(arrdecl, TYPE_ARRAY, $3);
-        $$ = node_param_append(arrdecl, $1, $3, @$);
-    }
+    : TYPE IDENT                           { $$ = node_param($1, 0, $2, @$); }
+    | TYPE dims IDENT                      { $$ = node_param($1, 1, $3, @$); }
+    ;
 
 opt_return
     : /* empty */                          { $$ = TYPE_VOID; }

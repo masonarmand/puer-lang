@@ -7,6 +7,11 @@ int[][] mat = [
         [1, 2, 3, 4, 5]
 ];
 
+def modify_array(int[] arr)
+{
+        arr[0] = 5;
+}
+
 println(arr);
 println("length of arr is", len(arr));
 println("append");
@@ -22,3 +27,8 @@ s = s + " world";
 println("string concat: " + s);
 s[5] = '_';
 println("indexing:", s);
+
+int[] arr2 = [1, 2, 3, 4, 5];
+println("arr2:", arr2);
+modify_array(arr2);
+println("arr2 after calling modify_array():", arr2);
