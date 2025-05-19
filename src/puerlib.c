@@ -11,11 +11,13 @@
 #include "puerstring.h"
 #include "scan.h"
 #include "util.h"
+
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 
 Var getch(Node* node, Var* argv)
@@ -141,8 +143,24 @@ Var gc_collect(Node* node, Var* argv)
         return out;
 }
 
+Var randrange(Node* node, Var* argv)
+{
+        Var out;
+        int min = argv[0].data.i;
+        int max = argv[1].data.i;
+
+        int range = max - min;
+        int num = (rand() % range) + min;
+        (void) node;
+
+        set_int(&out, num);
+        return out;
+}
+
 void init_puerlib(void)
 {
+        srand(time(NULL));
+
         builtin_register("input",      input,      TYPE_STRING, 1, TYPE_STRING);
         builtin_register("testlib",    testlib,    TYPE_VOID,   0);
         builtin_register("getch",      getch,      TYPE_INT,    0);
@@ -150,4 +168,5 @@ void init_puerlib(void)
         builtin_register("len",        len,        TYPE_INT,    1, TYPE_ANY);
         builtin_register("append",     append,     TYPE_VOID,   2, TYPE_ANY, TYPE_ANY);
         builtin_register("gc_collect", gc_collect, TYPE_VOID,   0);
+        builtin_register("randrange",  randrange,  TYPE_INT,    2, TYPE_INT, TYPE_INT);
 }
