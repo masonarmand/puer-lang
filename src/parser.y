@@ -220,7 +220,7 @@ function_def
 
 param_list
     : /* empty */                          { $$ = node(NODE_SEQ, @$, 0); }
-    | param                                { $$ = $1; }
+    | param                                { $$ = node(NODE_SEQ, @$, 1, $1); }
     | param_list ',' param                 { $$ = node_append($1, $3); }
     ;
 

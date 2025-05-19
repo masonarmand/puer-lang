@@ -129,7 +129,7 @@ Node* node_param(VarType type, int isarr, char* varname, YYLTYPE loc)
         if (type == TYPE_REC)
                 d->recname = g_recname;
 
-        return node(NODE_SEQ, loc, 1, d);
+        return d;
 }
 
 Node* node_append(Node* list, Node* child)
