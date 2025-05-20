@@ -157,6 +157,15 @@ Var randrange(Node* node, Var* argv)
         return out;
 }
 
+Var puer_abs(Node* node, Var* argv)
+{
+        Var out;
+        int val = argv[0].data.i;
+        (void) node;
+        set_int(&out, abs(val));
+        return out;
+}
+
 void init_puerlib(void)
 {
         srand(time(NULL));
@@ -169,4 +178,5 @@ void init_puerlib(void)
         builtin_register("append",     append,     TYPE_VOID,   2, TYPE_ANY, TYPE_ANY);
         builtin_register("gc_collect", gc_collect, TYPE_VOID,   0);
         builtin_register("randrange",  randrange,  TYPE_INT,    2, TYPE_INT, TYPE_INT);
+        builtin_register("abs",        puer_abs,   TYPE_INT,    1, TYPE_INT);
 }
