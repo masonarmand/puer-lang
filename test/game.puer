@@ -1,3 +1,4 @@
+// adapted into puer from this C roguelike tutorial: https://dev.to/ignaoya/series/13852
 rec Position {
         int x;
         int y;
@@ -9,8 +10,16 @@ rec Entity {
 };
 
 rec Tile {
-        char ch = '.';
+        char ch;
         bool walkable;
+        bool is_exit = false;
+};
+
+rec Room {
+        int height;
+        int width;
+        Position pos;
+        Position center;
 };
 
 int MAP_HEIGHT = 25;
@@ -18,15 +27,107 @@ int MAP_WIDTH = 79;
 Entity player;
 Tile[MAP_HEIGHT][MAP_WIDTH] map;
 
+str decorator;
+for (int x = 0; x < MAP_WIDTH; x++)
+        decorator += "-";
+
 def main()
 {
-        Position start_pos;
-        start_pos.x = 10;
-        start_pos.y = 20;
-
+        init_map(map);
+        Position start_pos = setup_map();
         player = create_player(start_pos);
 
+        clear();
         game_loop();
+}
+
+def create_room(int y, int x, int height, int width) -> Room
+{
+        Room r;
+        r.pos.y = y;
+        r.pos.x = x;
+        r.height = height;
+        r.width = width;
+        r.center.y = y + (height / 2);
+        r.center.x = x + (width / 2);
+
+        return r;
+}
+
+def add_room(Room room)
+{
+        for (int y = room.pos.y; y < room.pos.y + room.height; y++) {
+                for (int x = room.pos.x; x < room.pos.x + room.width; x++) {
+                        map[y][x].ch = '.';
+                        map[y][x].walkable = true;
+                }
+        }
+}
+
+def connect_room_centers(Position a, Position b)
+{
+        Position tmp;
+        tmp.x = a.x;
+        tmp.y = a.y;
+
+        while (true) {
+                if (abs((tmp.x - 1) - b.x) < abs(tmp.x - b.x))
+                        tmp.x--;
+                else if (abs((tmp.x + 1) - b.x) < abs(tmp.x - b.x))
+                        tmp.x++;
+                else if (abs((tmp.y + 1) - b.y) < abs(tmp.y - b.y))
+                        tmp.y++;
+                else if (abs((tmp.y - 1) - b.y) < abs(tmp.y - b.y))
+                        tmp.y--;
+                else
+                        break;
+                map[tmp.y][tmp.x].ch = '.';
+                map[tmp.y][tmp.x].walkable = true;
+        }
+}
+
+def init_map(Tile[][] tiles)
+{
+        for (int y = 0; y < MAP_HEIGHT; y++) {
+                for (int x = 0; x < MAP_WIDTH; x++) {
+                        tiles[y][x].ch = '#';
+                        tiles[y][x].walkable = false;
+                        tiles[y][x].is_exit = false;
+                }
+        }
+}
+
+def setup_map() -> Position
+{
+        int x;
+        int y;
+        int height;
+        int width;
+        int n_rooms = randrange(5, 11);
+        Room[n_rooms] rooms;
+        Position start_pos;
+
+        for (int i = 0; i < n_rooms; i++) {
+                y = randrange(1, MAP_HEIGHT - 10);
+                x = randrange(1, MAP_WIDTH - 20);
+                height = randrange(3, 7);
+                width = randrange(5, 15);
+                rooms[i] = create_room(y, x, height, width);
+                add_room(rooms[i]);
+                if (i > 0)
+                        connect_room_centers(rooms[i-1].center, rooms[i].center);
+        }
+
+        int exit_x = rooms[n_rooms - 1].center.x;
+        int exit_y = rooms[n_rooms - 1].center.y;
+
+        map[exit_y][exit_x].ch = '*';
+        map[exit_y][exit_x].is_exit = true;
+
+        start_pos.y = rooms[0].center.y;
+        start_pos.x = rooms[0].center.x;
+
+        return start_pos;
 }
 
 def create_player(Position start_pos) -> Entity
@@ -41,18 +142,39 @@ def create_player(Position start_pos) -> Entity
 
 def handle_input(int input)
 {
+        Position new_pos;
+        new_pos.y = player.pos.y;
+        new_pos.x = player.pos.x;
+
         if (input == 'k')
-                player.pos.y--;
+                new_pos.y--;
         else if (input == 'j')
-                player.pos.y++;
+                new_pos.y++;
         else if (input == 'h')
-                player.pos.x--;
+                new_pos.x--;
         else if (input == 'l')
-                player.pos.x++;
+                new_pos.x++;
+
+        move_player(new_pos);
+}
+
+def move_player(Position new_pos)
+{
+        if (map[new_pos.y][new_pos.x].walkable) {
+                player.pos.y = new_pos.y;
+                player.pos.x = new_pos.x;
+        }
 }
 
 def draw_world()
 {
+        println(decorator);
+        println(" Rogue demo:");
+        println("   use h, j, k, l keys to move player");
+        println("   press q to quit");
+        println(decorator);
+
+
         for (int y = 0; y < MAP_HEIGHT; y++) {
                 for (int x = 0; x < MAP_WIDTH; x++) {
                         if ((player.pos.x == x) && (player.pos.y == y))
@@ -73,6 +195,14 @@ def game_loop()
                 if (ch == 'q')
                         break;
                 handle_input(ch);
+
+                int x = player.pos.x;
+                int y = player.pos.y;
+                if (map[y][x].is_exit) {
+                        init_map(map);
+                        player.pos = setup_map();
+                }
+
                 clear();
                 draw_world();
         }
