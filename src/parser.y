@@ -93,7 +93,6 @@ char* g_recname = NULL;
 %type <node> rec_def rec_field_list rec_field
 %type <vartype> opt_return
 
-
 %%
 puer
     : top_code                             { root = $1; }
@@ -225,7 +224,7 @@ param_list
 
 param
     : TYPE IDENT                           { $$ = node_param($1, 0, $2, @$); }
-    | TYPE dims IDENT                      { $$ = node_param($1, 1, $3, @$); }
+    | TYPE dims IDENT                      { $$ = node_param($1, 1, $3, @$); free_ast($2); }
     ;
 
 opt_return
