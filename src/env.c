@@ -1,7 +1,6 @@
 /*
  * Author: Mason Armand
  * Date Created: May 2nd, 2025
- * Last Modified: May 2nd, 2025
  */
 #include "env.h"
 #include "scan.h"
